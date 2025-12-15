@@ -65,6 +65,7 @@ def copy(src: Path, dst: Path, do_backup: bool = True) -> None:
         if do_backup:
             backup(dst)
 
+    ensure_dir(dst.parent)
     shutil.copy2(src, dst)
     ui.ok(f"Copied: {src} -> {dst}")
 

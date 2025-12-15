@@ -11,28 +11,62 @@ def run(
     capture: bool = False,
     cwd: Path | None = None,
 ) -> subprocess.CompletedProcess[str]:
+    """Run a command, logging output based on verbosity."""
     ui.info(f"Running: {' '.join(cmd)}")
-    result = subprocess.run(
-        cmd,
-        check=check,
-        capture_output=capture,
-        text=True,
-        cwd=cwd,
-    )
-    return result
+
+    if capture:
+        # Always capture when explicitly requested
+        result = subprocess.run(
+            cmd,
+            check=check,
+            capture_output=True,
+            text=True,
+            cwd=cwd,
+        )
+        ui.log_cmd_output(result.stdout)
+        if result.stderr:
+            ui.log_cmd_output(result.stderr)
+        return result
+
+    if ui.is_verbose():
+        # Verbose mode: show output in real-time
+        result = subprocess.run(
+            cmd,
+            check=check,
+            text=True,
+            cwd=cwd,
+        )
+        return result
+    else:
+        # Quiet mode: capture and log to file only
+        result = subprocess.run(
+            cmd,
+            check=check,
+            capture_output=True,
+            text=True,
+            cwd=cwd,
+        )
+        ui.log_cmd_output(result.stdout)
+        if result.stderr:
+            ui.log_cmd_output(result.stderr)
+        return result
 
 
 def run_quiet(cmd: list[str], cwd: Path | None = None) -> bool:
+    """Run a command silently, return success status."""
     try:
-        subprocess.run(
+        result = subprocess.run(
             cmd,
             check=True,
             capture_output=True,
             text=True,
             cwd=cwd,
         )
+        ui.log_cmd_output(result.stdout)
         return True
-    except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError as e:
+        ui.log_cmd_output(e.stdout or "")
+        ui.log_cmd_output(e.stderr or "")
         return False
 
 
@@ -41,10 +75,25 @@ def is_installed(cmd: str) -> bool:
 
 
 def run_shell(script: str, check: bool = True) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        script,
-        shell=True,
-        check=check,
-        capture_output=False,
-        text=True,
-    )
+    """Run a shell script, logging output based on verbosity."""
+    ui.info(f"Running shell script")
+
+    if ui.is_verbose():
+        return subprocess.run(
+            script,
+            shell=True,
+            check=check,
+            text=True,
+        )
+    else:
+        result = subprocess.run(
+            script,
+            shell=True,
+            check=check,
+            capture_output=True,
+            text=True,
+        )
+        ui.log_cmd_output(result.stdout)
+        if result.stderr:
+            ui.log_cmd_output(result.stderr)
+        return result

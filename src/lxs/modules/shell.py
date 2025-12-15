@@ -31,7 +31,7 @@ def install_starship() -> None:
 
 
 def init_submodules() -> None:
-    gitmodules = config.PROJECT_ROOT / ".gitmodules"
+    gitmodules = config.LXS_ROOT / ".gitmodules"
     if not gitmodules.exists():
         return
 
@@ -42,7 +42,7 @@ def init_submodules() -> None:
     ui.step("Initializing git submodules")
     process.run(
         ["git", "submodule", "update", "--init", "--depth=1"],
-        cwd=config.PROJECT_ROOT,
+        cwd=config.LXS_ROOT,
     )
     ui.ok("Submodules initialized")
 

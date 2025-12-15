@@ -1,13 +1,13 @@
 import difflib
 from pathlib import Path
+from typing import Annotated
 
 import typer
 
 from lxs import config
 from lxs.core import fs, ui
 
-
-app = typer.Typer(help="Manage dotfiles")
+app = typer.Typer(no_args_is_help=True)
 
 
 DOTFILE_TREES = [
@@ -133,14 +133,13 @@ def diff() -> None:
 
 @app.command()
 def sync(
-    force: bool = typer.Option(False, "--force", "-f", help="Overwrite without prompting"),
+    force: Annotated[
+        bool,
+        typer.Option("--force", "-f", help="Overwrite without prompting"),
+    ] = False,
 ) -> None:
     """Sync dotfiles from source to destination."""
     mappings = get_dotfile_mappings()
-
-    fs.ensure_dir(config.DIR_ZSH_CONFIG)
-    fs.ensure_dir(config.DIR_ZSH_CONFIG / "zshrc.d")
-    fs.ensure_dir(config.XDG_CONFIG_HOME)
 
     synced = 0
     for src, dst in mappings:
