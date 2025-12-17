@@ -1,41 +1,32 @@
+# --------
+# Global
+# --------
+add_newline = true
+
 format = """
-$username\
-$hostname\
-$directory\
-$git_branch\
-$git_status\
-$python\
-$nodejs\
-$rust\
-$golang\
-$cmd_duration\
-$line_break\
-$character"""
+$hostname$directory
+$character
+"""
 
-[character]
-success_symbol = "[❯](green)"
-error_symbol = "[❯](red)"
-
+# --------
+# Directory
+# --------
 [directory]
-truncation_length = 3
 truncate_to_repo = true
+truncation_length = 3
+style = "bold blue"
 
-[git_branch]
-format = "[$branch]($style) "
-style = "purple"
+# --------
+# Hostname
+# --------
+[hostname]
+ssh_only = true
+format = "[$hostname]($style) "
+style = "dimmed red"
 
-[git_status]
-format = '([$all_status$ahead_behind]($style) )'
-style = "red"
-
-[python]
-format = '[${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
-symbol = "py "
-
-[nodejs]
-format = "[$symbol($version )]($style)"
-symbol = "node "
-
-[cmd_duration]
-min_time = 2_000
-format = "[$duration]($style) "
+# --------
+# Prompt symbol
+# --------
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol   = "[❯](bold red)"
