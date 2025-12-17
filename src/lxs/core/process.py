@@ -81,20 +81,18 @@ def is_installed(cmd: str) -> bool:
 
 
 def run_shell(script: str, check: bool = True) -> subprocess.CompletedProcess[str]:
-    """Run a shell script, logging output based on verbosity."""
+    """Run a shell script with bash, logging output based on verbosity."""
     ui.info(f"Running shell script")
 
     if ui.is_verbose():
         return subprocess.run(
-            script,
-            shell=True,
+            ["bash", "-c", script],
             check=check,
             text=True,
         )
     else:
         result = subprocess.run(
-            script,
-            shell=True,
+            ["bash", "-c", script],
             check=check,
             capture_output=True,
             text=True,
