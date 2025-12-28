@@ -157,7 +157,7 @@ main() {
     echo ""
     echo "Run the following command to continue:"
     echo ""
-    echo "    export PATH=\"\$HOME/.local/bin:\$PATH\" && uv run lxs"
+    echo "    export PATH=\"\$HOME/.local/bin:\$PATH\" && uv run tectonic"
 }
 
 main "$@"

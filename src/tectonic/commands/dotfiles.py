@@ -4,8 +4,8 @@ from typing import Annotated
 
 import typer
 
-from lxs import config
-from lxs.core import fs, ui
+from tectonic import config
+from tectonic.core import fs, ui
 
 app = typer.Typer(no_args_is_help=True)
 

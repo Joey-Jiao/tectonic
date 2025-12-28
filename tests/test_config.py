@@ -1,17 +1,17 @@
 import pytest
 from pathlib import Path
 
-from lxs import config
+from tectonic import config
 
 
 class TestPaths:
     def test_project_root_exists(self):
-        assert config.PROJECT_ROOT.exists()
-        assert (config.PROJECT_ROOT / "pyproject.toml").exists()
+        assert config.TECTONIC_ROOT.exists()
+        assert (config.TECTONIC_ROOT / "pyproject.toml").exists()
 
     def test_dotfiles_dir_exists(self):
         assert config.DOTFILES_DIR.exists()
-        assert config.DOTFILES_DIR == config.PROJECT_ROOT / "dotfiles"
+        assert config.DOTFILES_DIR == config.TECTONIC_ROOT / "dotfiles"
 
     def test_xdg_paths_are_under_home(self):
         home = Path.home()

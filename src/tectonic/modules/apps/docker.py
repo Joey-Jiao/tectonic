@@ -1,7 +1,7 @@
 import getpass
 
-from lxs import config
-from lxs.core import distro, process, ui
+from tectonic import config
+from tectonic.core import distro, process, ui
 
 
 def install_linux() -> None:

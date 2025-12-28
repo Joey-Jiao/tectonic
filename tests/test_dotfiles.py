@@ -2,7 +2,7 @@ import pytest
 from pathlib import Path
 from unittest.mock import patch
 
-from lxs.commands.dotfiles import get_dotfile_mappings, file_diff
+from tectonic.commands.dotfiles import get_dotfile_mappings, file_diff
 
 
 class TestGetDotfileMappings:
@@ -85,7 +85,7 @@ class TestDotfilesIntegration:
 
     def test_status_command(self):
         from typer.testing import CliRunner
-        from lxs.cli import app
+        from tectonic.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["dotfiles", "status"])
@@ -95,7 +95,7 @@ class TestDotfilesIntegration:
 
     def test_diff_command(self):
         from typer.testing import CliRunner
-        from lxs.cli import app
+        from tectonic.cli import app
 
         runner = CliRunner()
         result = runner.invoke(app, ["dotfiles", "diff"])

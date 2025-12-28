@@ -1,7 +1,7 @@
 import pytest
 from pathlib import Path
 
-from lxs.core import fs
+from tectonic.core import fs
 
 
 class TestEnsureDir:

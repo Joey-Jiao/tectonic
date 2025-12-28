@@ -2,12 +2,12 @@ from typing import Annotated
 
 import typer
 
-from lxs import config
-from lxs.commands import dotfiles, install, plugins
-from lxs.core import ui
+from tectonic import config
+from tectonic.commands import dotfiles, install, plugins
+from tectonic.core import ui
 
 app = typer.Typer(
-    name="lxs",
+    name="tectonic",
     help="Linux Setup CLI Tool",
     no_args_is_help=True,
 )

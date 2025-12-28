@@ -1,4 +1,4 @@
-# LXS: automated env setup
+# Tectonic: automated env setup
 
 Personal Linux/macOS environment setup tool. Installs dev tools, configures shell, and manages dotfiles.
 
@@ -9,15 +9,15 @@ Personal Linux/macOS environment setup tool. Installs dev tools, configures shel
 ./bootstrap.sh
 
 # Install everything
-uv run lxs install all
+uv run tectonic install all
 
 # Manage dotfiles
-uv run lxs dotfiles status    # Check drift
-uv run lxs dotfiles diff      # Show differences
-uv run lxs dotfiles sync      # Sync repo -> system
+uv run tectonic dotfiles status    # Check drift
+uv run tectonic dotfiles diff      # Show differences
+uv run tectonic dotfiles sync      # Sync repo -> system
 
 # List installed plugins
-uv run lxs plugins
+uv run tectonic plugins
 ```
 
 ## What gets installed

@@ -2,7 +2,7 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
-from lxs.core import ui
+from tectonic.core import ui
 
 
 def ensure_dir(path: Path) -> None:

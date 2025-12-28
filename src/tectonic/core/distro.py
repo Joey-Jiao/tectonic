@@ -2,7 +2,7 @@ import platform
 from dataclasses import dataclass
 from pathlib import Path
 
-from lxs.core import process, ui
+from tectonic.core import process, ui
 
 
 @dataclass

@@ -1,7 +1,7 @@
 import typer
 
-from lxs import modules
-from lxs.core import distro, process, ui
+from tectonic import modules
+from tectonic.core import distro, process, ui
 
 app = typer.Typer(no_args_is_help=True)
 

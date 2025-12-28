@@ -1,7 +1,7 @@
 import typer
 
-from lxs import config
-from lxs.core import ui
+from tectonic import config
+from tectonic.core import ui
 
 app = typer.Typer()
 

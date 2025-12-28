@@ -1,14 +1,14 @@
 import platform
 from pathlib import Path
 
-LXS_ROOT = Path(__file__).parent.parent.parent
-DOTFILES_DIR = LXS_ROOT / "dotfiles"
+TECTONIC_ROOT = Path(__file__).parent.parent.parent
+DOTFILES_DIR = TECTONIC_ROOT / "dotfiles"
 
 XDG_CONFIG_HOME = Path.home() / ".config"
 XDG_DATA_HOME = Path.home() / ".local" / "share"
 XDG_CACHE_HOME = Path.home() / ".cache"
 
-LOG_FILE = LXS_ROOT / "logs" / "lxs.log"
+LOG_FILE = TECTONIC_ROOT / "logs" / "tectonic.log"
 
 DIR_ZSH_CONFIG = XDG_CONFIG_HOME / "zsh"
 DIR_ZSH_DATA = XDG_DATA_HOME / "zsh"

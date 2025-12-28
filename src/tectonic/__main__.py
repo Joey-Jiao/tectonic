@@ -1,4 +1,4 @@
-from lxs.cli import app
+from tectonic.cli import app
 
 if __name__ == "__main__":
     app()

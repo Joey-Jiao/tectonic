@@ -2,8 +2,8 @@ import os
 import subprocess
 from pathlib import Path
 
-from lxs import config
-from lxs.core import distro, fs, process, ui
+from tectonic import config
+from tectonic.core import distro, fs, process, ui
 
 
 def install_zsh() -> None:
@@ -31,7 +31,7 @@ def install_starship() -> None:
 
 
 def init_submodules() -> None:
-    gitmodules = config.LXS_ROOT / ".gitmodules"
+    gitmodules = config.TECTONIC_ROOT / ".gitmodules"
     if not gitmodules.exists():
         return
 
@@ -42,7 +42,7 @@ def init_submodules() -> None:
     ui.step("Initializing git submodules")
     process.run(
         ["git", "submodule", "update", "--init", "--depth=1"],
-        cwd=config.LXS_ROOT,
+        cwd=config.TECTONIC_ROOT,
     )
     ui.ok("Submodules initialized")
 

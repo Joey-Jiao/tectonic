@@ -2,7 +2,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from lxs.core import ui
+from tectonic.core import ui
 
 
 def run(

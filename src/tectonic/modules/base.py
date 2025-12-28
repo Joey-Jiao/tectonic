@@ -1,5 +1,5 @@
-from lxs import config
-from lxs.core import distro, ui
+from tectonic import config
+from tectonic.core import distro, ui
 
 
 def run() -> None:

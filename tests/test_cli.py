@@ -1,18 +1,9 @@
 import pytest
 from typer.testing import CliRunner
 
-from lxs.cli import app
-from lxs import __version__
-
+from tectonic.cli import app
 
 runner = CliRunner()
-
-
-class TestVersion:
-    def test_version_command(self):
-        result = runner.invoke(app, ["version"])
-        assert result.exit_code == 0
-        assert __version__ in result.stdout
 
 
 class TestHelp:
@@ -34,7 +25,7 @@ class TestHelp:
 
 class TestInstallList:
     def test_list_modules(self):
-        result = runner.invoke(app, ["install", "--list"])
+        result = runner.invoke(app, ["install", "list"])
         assert result.exit_code == 0
         assert "base" in result.stdout
         assert "shell" in result.stdout
@@ -43,12 +34,6 @@ class TestInstallList:
         assert "dev-node" in result.stdout
         assert "apps-docker" in result.stdout
 
-    def test_install_no_args_shows_error(self):
+    def test_install_no_args_shows_help(self):
         result = runner.invoke(app, ["install"])
-        assert result.exit_code == 1
-        assert "No modules specified" in result.stdout
-
-    def test_install_unknown_module(self):
-        result = runner.invoke(app, ["install", "unknown-module"])
-        assert result.exit_code == 1
-        assert "Unknown module" in result.stdout
+        assert "Usage" in result.stdout

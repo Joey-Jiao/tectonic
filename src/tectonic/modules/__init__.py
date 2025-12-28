@@ -1,8 +1,8 @@
 from typing import Callable
 
-from lxs.modules import base, shell
-from lxs.modules.apps import docker
-from lxs.modules.dev import c, node, python
+from tectonic.modules import base, shell
+from tectonic.modules.apps import docker
+from tectonic.modules.dev import c, node, python
 
 MODULES: dict[str, Callable[[], None]] = {
     "base": base.run,

@@ -1,7 +1,7 @@
 import tempfile
 
-from lxs import config
-from lxs.core import fs, process, ui
+from tectonic import config
+from tectonic.core import fs, process, ui
 
 
 def activate_conda() -> None:
