@@ -1,0 +1,4 @@
+apt: [build-essential, cmake, gdb, autoconf, automake, libtool, bison, ninja-build]
+pacman: [base-devel, cmake, gdb, autoconf, automake, libtool, bison, ninja]
+dnf: [gcc, gcc-c++, make, cmake, gdb, autoconf, automake, libtool, bison, ninja-build]
+brew: [gcc, cmake, gdb, autoconf, automake, libtool, bison, ninja]

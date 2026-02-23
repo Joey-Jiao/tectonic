@@ -1,0 +1,2 @@
+apt: [nodejs, npm]
+brew: [node, pnpm]

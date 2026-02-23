@@ -31,3 +31,5 @@ uv.lock
 *.tmp
 *.log
 *.bak
+
+/external/

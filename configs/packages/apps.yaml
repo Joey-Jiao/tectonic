@@ -1,0 +1,4 @@
+apt: [docker.io, docker-compose]
+pacman: [docker, docker-compose]
+dnf: [docker, docker-compose]
+brew: []

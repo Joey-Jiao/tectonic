@@ -1,0 +1,20 @@
+add_newline = true
+
+format = """
+$hostname$directory
+$character
+"""
+
+[directory]
+truncate_to_repo = true
+truncation_length = 3
+style = "bold blue"
+
+[hostname]
+ssh_only = true
+format = "[$hostname]($style) "
+style = "dimmed red"
+
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol   = "[❯](bold red)"

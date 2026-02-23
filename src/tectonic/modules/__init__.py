@@ -1,12 +1,13 @@
-from typing import Callable
+from collections.abc import Callable
 
-from tectonic.modules import base, shell
+from tectonic.modules import base, shell, syncthing
 from tectonic.modules.apps import docker
 from tectonic.modules.dev import c, node, python
 
 MODULES: dict[str, Callable[[], None]] = {
     "base": base.run,
     "shell": shell.run,
+    "syncthing": syncthing.run,
     "dev-c": c.run,
     "dev-python": python.run,
     "dev-node": node.run,

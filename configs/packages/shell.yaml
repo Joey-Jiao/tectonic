@@ -1,0 +1,4 @@
+apt: [zsh]
+pacman: [zsh, starship]
+dnf: [zsh]
+brew: [zsh, starship]

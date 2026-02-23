@@ -52,18 +52,8 @@ def _detect_linux() -> Distro:
     pkg_mgr = ""
     if distro_id in ("ubuntu", "debian", "linuxmint", "pop"):
         pkg_mgr = "apt"
-    elif distro_id in ("arch", "manjaro", "endeavouros"):
-        pkg_mgr = "pacman"
-    elif distro_id == "fedora":
-        pkg_mgr = "dnf"
-    elif distro_id in ("centos", "rhel", "rocky", "almalinux"):
-        pkg_mgr = "yum"
     elif "debian" in id_like:
         pkg_mgr = "apt"
-    elif "arch" in id_like:
-        pkg_mgr = "pacman"
-    elif "fedora" in id_like:
-        pkg_mgr = "dnf"
 
     return Distro(
         id=distro_id,
@@ -95,12 +85,6 @@ def pkg_update() -> None:
     match d.pkg_mgr:
         case "apt":
             process.run(["sudo", "apt", "update"])
-        case "pacman":
-            process.run(["sudo", "pacman", "-Sy"])
-        case "dnf":
-            process.run_quiet(["sudo", "dnf", "check-update"])
-        case "yum":
-            process.run_quiet(["sudo", "yum", "check-update"])
         case "brew":
             process.run(["brew", "update"])
 
@@ -115,12 +99,6 @@ def pkg_install(packages: list[str]) -> None:
     match d.pkg_mgr:
         case "apt":
             process.run(["sudo", "apt", "install", "-y", *packages])
-        case "pacman":
-            process.run(["sudo", "pacman", "-S", "--noconfirm", "--needed", *packages])
-        case "dnf":
-            process.run(["sudo", "dnf", "install", "-y", *packages])
-        case "yum":
-            process.run(["sudo", "yum", "install", "-y", *packages])
         case "brew":
             process.run(["brew", "install", *packages])
 
@@ -131,10 +109,6 @@ def pkg_installed(package: str) -> bool:
     match d.pkg_mgr:
         case "apt":
             return process.run_quiet(["dpkg", "-l", package])
-        case "pacman":
-            return process.run_quiet(["pacman", "-Qi", package])
-        case "dnf" | "yum":
-            return process.run_quiet(["rpm", "-q", package])
         case "brew":
             return process.run_quiet(["brew", "list", package])
 

@@ -1,0 +1,4 @@
+apt: [curl, wget, git, vim, neovim, btop, tree, unzip, zip, jq, ripgrep, fd-find, fzf, bat, tmux, rsync]
+pacman: [curl, wget, git, vim, neovim, btop, tree, unzip, zip, jq, ripgrep, fd, fzf, bat, tmux, rsync]
+dnf: [curl, wget, git, vim, neovim, btop, tree, unzip, zip, jq, ripgrep, fd-find, fzf, bat, tmux, rsync]
+brew: [curl, wget, git, vim, neovim, btop, tree, unzip, zip, jq, ripgrep, fd, fzf, bat, tmux, rsync, tlrc]

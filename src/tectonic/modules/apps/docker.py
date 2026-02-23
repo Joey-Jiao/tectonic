@@ -6,7 +6,7 @@ from tectonic.core import distro, process, ui
 
 def install_linux() -> None:
     d = distro.detect()
-    packages = config.PKGS_APPS.get(d.pkg_mgr, [])
+    packages = config.configs.get(f"packages.apps.{d.pkg_mgr}", [])
 
     if not packages:
         ui.warn(f"No app packages defined for {d.pkg_mgr}")

@@ -6,7 +6,7 @@ def run() -> None:
     ui.section("C/C++ Development Environment")
 
     d = distro.detect()
-    packages = config.PKGS_DEV_C.get(d.pkg_mgr, [])
+    packages = config.configs.get(f"packages.dev-c.{d.pkg_mgr}", [])
 
     if not packages:
         ui.warn(f"No C/C++ packages defined for {d.pkg_mgr}")

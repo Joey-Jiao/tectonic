@@ -6,7 +6,7 @@ def run() -> None:
     ui.section("Base System Packages")
 
     d = distro.detect()
-    packages = config.PKGS_BASE.get(d.pkg_mgr, [])
+    packages = config.configs.get(f"packages.base.{d.pkg_mgr}", [])
 
     if not packages:
         ui.warn(f"No base packages defined for {d.pkg_mgr}")

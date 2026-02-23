@@ -1,0 +1,44 @@
+// VCS
+.git
+
+// OS
+.DS_Store
+._*
+Thumbs.db
+
+// Temp
+*.swp
+*.swo
+*~
+*.bak
+*.tmp
+
+// Python
+__pycache__
+*.py[cod]
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.ipynb_checkpoints
+.venv
+venv
+
+// Node
+node_modules
+dist
+build
+.next
+.turbo
+coverage
+
+// C/C++
+*.o
+*.a
+*.so
+*.dylib
+cmake-build*
+CMakeFiles
+
+// IDE
+.vscode
+*.lock

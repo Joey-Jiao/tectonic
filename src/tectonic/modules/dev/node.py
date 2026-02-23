@@ -1,44 +1,21 @@
-import os
-
 from tectonic import config
-from tectonic.core import fs, process, ui
-
-
-def activate_nvm() -> None:
-    nvm_sh = config.DIR_NVM / "nvm.sh"
-    if nvm_sh.exists():
-        os.environ["NVM_DIR"] = str(config.DIR_NVM)
-        process.run_shell(f'source "{nvm_sh}"')
+from tectonic.core import distro, process, ui
 
 
 def run() -> None:
-    ui.section("Node.js Development Environment (NVM)")
+    ui.section("Node.js Development Environment")
 
-    if config.DIR_NVM.exists():
-        ui.info(f"NVM already installed at {config.DIR_NVM}")
+    d = distro.detect()
+    packages = config.configs.get(f"packages.dev-node.{d.pkg_mgr}", [])
+
+    if not packages:
+        ui.warn(f"No Node.js packages defined for {d.pkg_mgr}")
         return
 
-    fs.ensure_dir(config.DIR_NVM)
+    distro.pkg_install(packages)
 
-    ui.step("Installing NVM")
-    # NVM_DIR must be set before running install.sh
-    process.run_shell(f'''
-        export NVM_DIR="{config.DIR_NVM}"
-        curl -fsSL {config.URL_NVM_INSTALL} | bash
-    ''')
+    if process.is_installed("node"):
+        result = process.run(["node", "--version"], capture=True)
+        ui.info(f"Node.js: {result.stdout.strip()}")
 
-    nvm_sh = config.DIR_NVM / "nvm.sh"
-    if not nvm_sh.exists():
-        ui.error("NVM installation failed")
-        return
-
-    ui.step("Installing latest LTS Node.js")
-    process.run_shell(f'''
-        export NVM_DIR="{config.DIR_NVM}"
-        source "{nvm_sh}"
-        nvm install --lts
-        nvm use --lts
-        nvm alias default 'lts/*'
-    ''')
-
-    ui.ok("NVM and Node.js installed")
+    ui.ok("Node.js development environment installed")

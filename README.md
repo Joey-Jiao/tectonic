@@ -1,6 +1,6 @@
 # Tectonic: automated env setup
 
-Personal Linux/macOS environment setup tool. Installs dev tools, configures shell, and manages dotfiles.
+Personal macOS/Linux environment setup tool. Installs dev tools, configures shell, and manages dotfiles.
 
 ## Usage
 
@@ -9,7 +9,13 @@ Personal Linux/macOS environment setup tool. Installs dev tools, configures shel
 ./bootstrap.sh
 
 # Install everything
-uv run tectonic install all
+uv run tectonic install
+
+# Install a specific module
+uv run tectonic install base
+
+# List available modules
+uv run tectonic install --list
 
 # Manage dotfiles
 uv run tectonic dotfiles status    # Check drift
@@ -33,5 +39,3 @@ uv run tectonic plugins
 
 - macOS (Homebrew)
 - Ubuntu/Debian (apt)
-- Arch Linux (pacman)
-- Fedora (dnf)

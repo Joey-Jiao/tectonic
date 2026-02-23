@@ -5,62 +5,47 @@ from pathlib import Path
 from tectonic.core import ui
 
 
+def _exec(
+    cmd: list[str],
+    check: bool = True,
+    cwd: Path | None = None,
+) -> subprocess.CompletedProcess[str]:
+    if ui.is_verbose():
+        return subprocess.run(cmd, check=check, text=True, cwd=cwd)
+
+    result = subprocess.run(
+        cmd, check=check, capture_output=True, text=True, cwd=cwd,
+    )
+    ui.log_cmd_output(result.stdout)
+    if result.stderr:
+        ui.log_cmd_output(result.stderr)
+    return result
+
+
 def run(
     cmd: list[str],
     check: bool = True,
     capture: bool = False,
     cwd: Path | None = None,
 ) -> subprocess.CompletedProcess[str]:
-    """Run a command, logging output based on verbosity."""
     ui.info(f"Running: {' '.join(cmd)}")
 
     if capture:
-        # Always capture when explicitly requested
         result = subprocess.run(
-            cmd,
-            check=check,
-            capture_output=True,
-            text=True,
-            cwd=cwd,
+            cmd, check=check, capture_output=True, text=True, cwd=cwd,
         )
         ui.log_cmd_output(result.stdout)
         if result.stderr:
             ui.log_cmd_output(result.stderr)
         return result
 
-    if ui.is_verbose():
-        # Verbose mode: show output in real-time
-        result = subprocess.run(
-            cmd,
-            check=check,
-            text=True,
-            cwd=cwd,
-        )
-        return result
-    else:
-        # Quiet mode: capture and log to file only
-        result = subprocess.run(
-            cmd,
-            check=check,
-            capture_output=True,
-            text=True,
-            cwd=cwd,
-        )
-        ui.log_cmd_output(result.stdout)
-        if result.stderr:
-            ui.log_cmd_output(result.stderr)
-        return result
+    return _exec(cmd, check=check, cwd=cwd)
 
 
 def run_quiet(cmd: list[str], cwd: Path | None = None) -> bool:
-    """Run a command silently, return success status."""
     try:
         result = subprocess.run(
-            cmd,
-            check=True,
-            capture_output=True,
-            text=True,
-            cwd=cwd,
+            cmd, check=True, capture_output=True, text=True, cwd=cwd,
         )
         ui.log_cmd_output(result.stdout)
         return True
@@ -71,7 +56,6 @@ def run_quiet(cmd: list[str], cwd: Path | None = None) -> bool:
 
 
 def run_interactive(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess[str]:
-    """Run a command interactively (allows user input like passwords)."""
     ui.info(f"Running: {' '.join(cmd)}")
     return subprocess.run(cmd, check=check, text=True)
 
@@ -81,23 +65,5 @@ def is_installed(cmd: str) -> bool:
 
 
 def run_shell(script: str, check: bool = True) -> subprocess.CompletedProcess[str]:
-    """Run a shell script with bash, logging output based on verbosity."""
-    ui.info(f"Running shell script")
-
-    if ui.is_verbose():
-        return subprocess.run(
-            ["bash", "-c", script],
-            check=check,
-            text=True,
-        )
-    else:
-        result = subprocess.run(
-            ["bash", "-c", script],
-            check=check,
-            capture_output=True,
-            text=True,
-        )
-        ui.log_cmd_output(result.stdout)
-        if result.stderr:
-            ui.log_cmd_output(result.stderr)
-        return result
+    ui.info("Running shell script")
+    return _exec(["bash", "-c", script], check=check)
