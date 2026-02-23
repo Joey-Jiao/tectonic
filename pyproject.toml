@@ -1,7 +1,7 @@
 [project]
 name = "tectonic"
 version = "1.0.0"
-description = "Automated Linux/macOS environment setup tool"
+description = "Multi-host environment provisioning and management"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
