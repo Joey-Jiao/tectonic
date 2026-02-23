@@ -1,41 +1,52 @@
-# Tectonic: automated env setup
+# Tectonic
 
-Personal macOS/Linux environment setup tool. Installs dev tools, configures shell, and manages dotfiles.
+Multi-host environment provisioning and management for macOS and Linux.
 
-## Usage
+## Layers
 
-```bash
-# Bootstrap (installs uv, git, python)
-./bootstrap.sh
-
-# Install everything
-uv run tectonic install
-
-# Install a specific module
-uv run tectonic install base
-
-# List available modules
-uv run tectonic install --list
-
-# Manage dotfiles
-uv run tectonic dotfiles status    # Check drift
-uv run tectonic dotfiles diff      # Show differences
-uv run tectonic dotfiles sync      # Sync repo -> system
-
-# List installed plugins
-uv run tectonic plugins
+```
+Layer 4: Services        launchd/systemd
+Layer 3: Data            Syncthing
+Layer 2: Configuration   chezmoi
+Layer 1: Software        tectonic CLI
+Layer 0: Infrastructure  1Password + Tailscale
 ```
 
-## What gets installed
+See [architecture.md](docs/architecture.md) for details.
 
-- **base**: curl, git, vim, neovim, htop, tree
-- **shell**: zsh, starship, plugins (autosuggestions, syntax-highlighting, completions)
-- **dev-c**: gcc, cmake, gdb, ninja
-- **dev-python**: miniforge (conda & mamba)
-- **dev-node**: nvm + node.js LTS
-- **apps-docker**: Docker
+## Quick Start
 
-## Supported platforms
+After Layer 0 is in place (Homebrew/apt, 1Password, Tailscale):
 
-- macOS (Homebrew)
-- Ubuntu/Debian (apt)
+```bash
+brew install uv          # or: curl -LsSf https://astral.sh/uv/install.sh | sh
+git clone <repo> && cd tectonic
+uv run tectonic install
+chezmoi init --source ~/workspace/infra/tectonic/home --apply
+```
+
+## CLI
+
+```bash
+tectonic install          # detect hostname, install matching modules
+tectonic install <module> # install a single module
+tectonic install --list   # list available modules
+```
+
+## Modules
+
+| Module | Contents |
+|--------|----------|
+| `base` | curl, git, vim, neovim, htop, tree, unzip |
+| `shell` | zsh, starship, plugins |
+| `dev-c` | gcc, cmake, gdb, ninja |
+| `dev-python` | uv |
+| `dev-node` | Node.js LTS, pnpm |
+| `syncthing` | Syncthing |
+| `apps-docker` | Docker |
+
+## Docs
+
+- [architecture.md](docs/architecture.md) — layered model, repo layout, module system
+- [hardware.md](docs/hardware/hardware.md) — machine fleet
+- [naming.md](docs/naming.md) — naming conventions
