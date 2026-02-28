@@ -1,6 +1,7 @@
 [user]
     name = "{{ .name }}"
     email = "{{ .email }}"
+{{- if ne .hosttype "hpc" }}
     signingkey = {{ .signingkey }}
 
 [gpg]
@@ -15,3 +16,4 @@
 
 [commit]
     gpgsign = true
+{{- end }}

@@ -1,6 +1,42 @@
+{{- $hostsRaw := output "cat" (joinPath .chezmoi.sourceDir ".." "configs" "hosts.yml") -}}
+{{- $hostsData := $hostsRaw | fromYaml -}}
+{{- $hostname := .chezmoi.hostname -}}
+{{- $hosttype := "standard" -}}
+{{- $scratch := "" -}}
+{{- $lmodPkg := "" -}}
+{{- $hpcModules := list -}}
+
+{{- range $name, $host := $hostsData.hosts -}}
+{{-   $matched := false -}}
+{{-   if eq $hostname $name }}{{ $matched = true }}{{ end -}}
+{{-   if hasKey $host "aliases" -}}
+{{-     range $alias := $host.aliases -}}
+{{-       if eq $hostname $alias }}{{ $matched = true }}{{ end -}}
+{{-     end -}}
+{{-   end -}}
+{{-   if $matched -}}
+{{-     if hasKey $host "hpc" -}}
+{{-       $hosttype = "hpc" -}}
+{{-       $scratch = $host.hpc.scratch -}}
+{{-       $lmodPkg = $host.hpc.lmod_pkg -}}
+{{-       $hpcModules = $host.hpc.modules | default list -}}
+{{-     end -}}
+{{-   end -}}
+{{- end -}}
+
 sourceDir = "{{ .chezmoi.sourceDir }}"
 
 [data]
     name = "Joey Jiao"
     email = "infra@joeyjiao.dev"
     signingkey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH1x/F7Bzqbxi8lrH8xRF77ZQ9R0csIRRgezlWQ18iLx"
+    hosttype = "{{ $hosttype }}"
+    scratch = "{{ $scratch }}"
+    lmod_pkg = "{{ $lmodPkg }}"
+    hpc_modules = {{ $hpcModules | toJson }}
+
+[data.hosts]
+{{- range $name, $host := $hostsData.hosts }}
+    [data.hosts.{{ $name }}]
+        user = "{{ $host.user }}"
+{{- end }}

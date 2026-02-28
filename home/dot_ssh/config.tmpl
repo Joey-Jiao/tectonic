@@ -1,8 +1,10 @@
+{{- if ne .hosttype "hpc" }}
 Host *
 {{- if eq .chezmoi.os "darwin" }}
     IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
 {{- else }}
     IdentityAgent "~/.1password/agent.sock"
+{{- end }}
 {{- end }}
 {{ range $name, $host := .hosts -}}
 {{ if ne $name $.chezmoi.hostname }}

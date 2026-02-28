@@ -11,8 +11,9 @@ def activate_sudo() -> None:
     process.run_interactive(["sudo", "-v"])
 
 
-def _install_modules(names: list[str]) -> None:
-    activate_sudo()
+def _install_modules(names: list[str], skip_sudo: bool = False) -> None:
+    if not skip_sudo:
+        activate_sudo()
     distro.detect()
 
     for name in names:
@@ -66,6 +67,7 @@ def default(ctx: typer.Context) -> None:
     hostname = host.get_hostname()
     try:
         hosts_config = host.load_hosts(config.HOSTS_FILE)
+        tectonic_name, host_entry = host.find_host(hostname, hosts_config)
         resolved = host.resolve_modules(hostname, hosts_config)
     except FileNotFoundError:
         ui.error(f"Hosts file not found: {config.HOSTS_FILE}")
@@ -75,6 +77,8 @@ def default(ctx: typer.Context) -> None:
         ui.info("Use 'tectonic install all' or 'tectonic install module <name>' instead")
         raise typer.Exit(code=1)
 
-    ui.section(f"Host-aware Setup: {hostname}")
+    is_hpc = "hpc" in host_entry
+
+    ui.section(f"Host-aware Setup: {tectonic_name}")
     ui.info(f"Modules: {', '.join(resolved)}")
-    _install_modules(resolved)
+    _install_modules(resolved, skip_sudo=is_hpc)

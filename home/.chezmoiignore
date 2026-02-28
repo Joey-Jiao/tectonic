@@ -1,2 +1,10 @@
 README.md
 LICENSE
+
+{{ if ne .hosttype "hpc" }}
+.bash_profile
+{{ end }}
+
+{{ if eq .hosttype "hpc" }}
+.config/1Password
+{{ end }}

@@ -62,7 +62,7 @@ class TestHostAwareInstall:
         with patch("tectonic.commands.install.host.get_hostname", return_value="testhost"), \
              patch("tectonic.commands.install.config.HOSTS_FILE", hosts_file), \
              patch("tectonic.commands.install._install_modules") as mock_install:
-            mock_install.side_effect = lambda names: installed.extend(names)
+            mock_install.side_effect = lambda names, **kwargs: installed.extend(names)
             result = runner.invoke(app, ["install"])
 
         assert result.exit_code == 0
@@ -78,3 +78,51 @@ class TestHostAwareInstall:
 
         assert result.exit_code == 1
         assert "not found" in result.stdout
+
+    def test_hpc_host_skips_sudo(self, tmp_path):
+        hosts_file = tmp_path / "hosts.yml"
+        hosts_file.write_text(yaml.dump({
+            "presets": {"hpc": ["shell-hpc"]},
+            "hosts": {
+                "pioneer": {
+                    "preset": "hpc",
+                    "user": "axj770",
+                    "aliases": ["hpc5"],
+                    "hpc": {"scratch": "/scratch/users/axj770", "lmod_pkg": "/usr/local/lmod/lmod"},
+                },
+            },
+        }))
+
+        call_kwargs: dict = {}
+
+        with patch("tectonic.commands.install.host.get_hostname", return_value="hpc5"), \
+             patch("tectonic.commands.install.config.HOSTS_FILE", hosts_file), \
+             patch("tectonic.commands.install._install_modules") as mock_install:
+            mock_install.side_effect = lambda names, **kw: call_kwargs.update(kw)
+            result = runner.invoke(app, ["install"])
+
+        assert result.exit_code == 0
+        assert "pioneer" in result.stdout
+        assert call_kwargs.get("skip_sudo") is True
+
+    def test_alias_resolves_to_tectonic_name(self, tmp_path):
+        hosts_file = tmp_path / "hosts.yml"
+        hosts_file.write_text(yaml.dump({
+            "presets": {"hpc": ["shell-hpc"]},
+            "hosts": {
+                "pioneer": {
+                    "preset": "hpc",
+                    "user": "axj770",
+                    "aliases": ["hpc5", "hpc6"],
+                    "hpc": {"scratch": "/scratch"},
+                },
+            },
+        }))
+
+        with patch("tectonic.commands.install.host.get_hostname", return_value="hpc6"), \
+             patch("tectonic.commands.install.config.HOSTS_FILE", hosts_file), \
+             patch("tectonic.commands.install._install_modules"):
+            result = runner.invoke(app, ["install"])
+
+        assert result.exit_code == 0
+        assert "pioneer" in result.stdout

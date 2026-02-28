@@ -27,6 +27,9 @@ SERVICES_FILE = CONFIGS_DIR / "services.yaml"
 ARCH = platform.machine()
 SYSTEM = platform.system()
 
-AVAILABLE_MODULES = ["base", "shell", "syncthing", "dev-c", "dev-python", "dev-node", "apps-docker"]
+AVAILABLE_MODULES = [
+    "base", "shell", "shell-hpc", "syncthing",
+    "dev-c", "dev-python", "dev-node", "apps-docker",
+]
 
 configs = ConfigService(config_dir=CONFIGS_DIR)
