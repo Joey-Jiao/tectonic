@@ -8,4 +8,7 @@ if [[ -x /opt/homebrew/bin/brew ]]; then
 elif [[ -x /usr/local/bin/brew ]]; then
     eval "$(/usr/local/bin/brew shellenv)"
 fi
+{{- if eq .chezmoi.os "darwin" }}
+export SSH_AUTH_SOCK="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+{{- end }}
 {{ end -}}
