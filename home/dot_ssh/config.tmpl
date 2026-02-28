@@ -9,7 +9,10 @@ Host *
 {{ range $name, $host := .hosts -}}
 {{ if ne $name $.chezmoi.hostname }}
 Host {{ $name }}
-    HostName {{ $name }}
+    HostName {{ if hasKey $host "ssh_host" }}{{ $host.ssh_host }}{{ else }}{{ $name }}{{ end }}
     User {{ $host.user }}
+{{- if and (hasKey $host "is_hpc") $host.is_hpc }}
+    ForwardAgent yes
+{{- end }}
 {{ end -}}
 {{ end -}}

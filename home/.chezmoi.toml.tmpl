@@ -39,4 +39,10 @@ sourceDir = "{{ .chezmoi.sourceDir }}"
 {{- range $name, $host := $hostsData.hosts }}
     [data.hosts.{{ $name }}]
         user = "{{ $host.user }}"
+{{- if hasKey $host "ssh_host" }}
+        ssh_host = "{{ $host.ssh_host }}"
+{{- end }}
+{{- if hasKey $host "hpc" }}
+        is_hpc = true
+{{- end }}
 {{- end }}
