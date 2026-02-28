@@ -4,6 +4,7 @@ module load {{ . }}
 {{ end -}}
 
 export SCRATCH="{{ .scratch }}"
+[[ -d "$SCRATCH" ]] || mkdir -p "$SCRATCH"
 
 alias cds="cd $SCRATCH"
 alias scratch-ls="find $SCRATCH -maxdepth 2 -type f -mtime +10 -printf '%T+ %p\n' | sort"
