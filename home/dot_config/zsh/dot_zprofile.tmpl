@@ -1,4 +1,5 @@
 {{ if eq .hosttype "hpc" -}}
+fpath=(/usr/share/zsh/$ZSH_VERSION/functions /usr/share/zsh/site-functions $fpath)
 source {{ .lmod_pkg }}/init/zsh
 {{ else -}}
 if [[ -x /opt/homebrew/bin/brew ]]; then
