@@ -3,7 +3,6 @@ LICENSE
 
 {{ if ne .hosttype "hpc" }}
 .bash_profile
-.ssh/authorized_keys
 {{ end }}
 
 {{ if eq .hosttype "hpc" }}
