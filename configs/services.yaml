@@ -1,1 +1,13 @@
-services: {}
+services:
+  strata:
+    program: ~/.local/bin/uv
+    args: [run, --project, ~/workspace/infra/strata, strata, serve, --transport, http, --port, "8716"]
+    keep_alive: true
+    run_at_load: true
+    hosts: [campbell]
+  strata-watch:
+    program: ~/.local/bin/uv
+    args: [run, --project, ~/workspace/infra/strata, strata, paper, watch]
+    keep_alive: true
+    run_at_load: true
+    hosts: [campbell]
