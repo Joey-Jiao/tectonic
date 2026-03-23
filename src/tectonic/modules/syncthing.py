@@ -1,5 +1,10 @@
+from pathlib import Path
+
 from tectonic import config
-from tectonic.core import distro, process, ui
+from tectonic.core import distro, fs, process, ui
+
+SYNCIGNORE_SRC = config.CONFIGS_DIR / "syncignore"
+SYNCIGNORE_DST = Path.home() / "workspace" / ".syncignore"
 
 
 def _start_service() -> None:
@@ -11,6 +16,12 @@ def _start_service() -> None:
         process.run(["sudo", "systemctl", "enable", "--now", "syncthing@" + process.run(
             ["whoami"], capture=True,
         ).stdout.strip()])
+
+
+def _deploy_syncignore() -> None:
+    if not SYNCIGNORE_DST.parent.is_dir():
+        return
+    fs.copy(SYNCIGNORE_SRC, SYNCIGNORE_DST, do_backup=False)
 
 
 def run() -> None:
@@ -25,5 +36,6 @@ def run() -> None:
 
     distro.pkg_install(packages)
     _start_service()
+    _deploy_syncignore()
 
     ui.ok("Syncthing installed and running")

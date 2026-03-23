@@ -27,10 +27,23 @@ chezmoi init --source ~/workspace/infra/tectonic/home --apply
 
 ## CLI
 
-```bash
-tectonic install          # detect hostname, install matching modules
-tectonic install <module> # install a single module
-tectonic install --list   # list available modules
+```
+tectonic
+├── * deploy <host> <command...>     Execute tectonic command on a remote host
+│   └── [--dry-run]                  Show commands without executing
+│
+├── * broadcast <command...>         Execute tectonic command on all reachable hosts
+│   └── [--dry-run]                  Show commands without executing
+│
+├── install                          Detect hostname, install matching modules
+│   ├── all                          Install every registered module
+│   ├── module <name>                Install a single module by name
+│   └── list                         List available modules
+│
+└── services                         Deploy all services for current host
+    ├── status                       List service status
+    ├── load <name>                  Install and load a service
+    └── unload <name>               Unload and remove a service
 ```
 
 ## Modules

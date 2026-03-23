@@ -1,8 +1,16 @@
 import socket
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import yaml
+
+
+@dataclass
+class DeployTarget:
+    name: str
+    user: str
+    ssh_host: str
 
 
 def get_hostname() -> str:
@@ -13,6 +21,26 @@ def load_hosts(path: Path) -> dict[str, Any]:
     with path.open() as f:
         data: dict[str, Any] = yaml.safe_load(f)
     return data
+
+
+def resolve_deploy_targets(hosts_config: dict[str, Any]) -> list[DeployTarget]:
+    current = get_hostname()
+    hosts = hosts_config.get("hosts", {})
+    targets = []
+    for name, entry in hosts.items():
+        if name == current:
+            continue
+        if entry.get("preset") == "hpc":
+            continue
+        ssh_host = entry.get("ssh_host")
+        if not ssh_host:
+            continue
+        targets.append(DeployTarget(
+            name=name,
+            user=entry["user"],
+            ssh_host=ssh_host,
+        ))
+    return targets
 
 
 def find_host(hostname: str, hosts_config: dict[str, Any]) -> tuple[str, dict[str, Any]]:

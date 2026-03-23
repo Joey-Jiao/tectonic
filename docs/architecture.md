@@ -43,9 +43,13 @@ tectonic/
 │   │   └── 1Password/ssh/
 │   └── dot_ssh/
 ├── src/tectonic/             # Python environment manager (Layer 1)
-│   ├── cli.py
 │   ├── config.py
 │   ├── base/                 # ConfigService (reads configs/ YAML)
+│   ├── cli/                  # CLI commands and app entry point
+│   │   ├── __init__.py       # App definition and command registration
+│   │   ├── install.py
+│   │   ├── services.py
+│   │   └── deploy.py        # deploy + broadcast
 │   ├── core/
 │   │   ├── distro.py
 │   │   ├── process.py
@@ -113,6 +117,8 @@ Each module is a Python file with a `run()` entry point, registered in `modules/
 | `tectonic install all` | Install every registered module |
 | `tectonic install <module>` | Install a single module by name |
 | `tectonic install --list` | List available modules |
+| `tectonic deploy <host> <cmd...>` | Execute tectonic command on a remote host via SSH |
+| `tectonic broadcast <cmd...>` | Execute tectonic command on all reachable remote hosts |
 
 ## Bootstrap Flow
 

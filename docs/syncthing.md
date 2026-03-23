@@ -8,7 +8,6 @@ Syncthing handles Layer 3 (Data) — continuous synchronization of user data bet
 |--------|---------|----------|
 | `workspace` | Code repositories, research knowledge base | everest ↔ campbell ↔ granite |
 | `misc` | Personal documents, portraits, miscellaneous files | everest ↔ campbell ↔ granite |
-| `archive` | Previous code, archived content | everest ↔ campbell ↔ granite |
 
 ## Why Syncthing
 
