@@ -4,7 +4,8 @@
 
 | Host | OS | Role | Preset | Notes |
 |------|----|------|--------|-------|
-| everest | macOS | workstation | workstation | Primary development machine |
+| blanc | macOS | workstation | workstation | Primary development machine |
+| everest | macOS | workstation | workstation | Former primary development machine |
 | campbell | macOS | server | server + dev-node | Runs MCP server, OpenClaw, and other long-lived services |
 | granite | Linux | workstation | workstation + apps-docker | Linux development environment |
 
@@ -20,6 +21,7 @@ All machines are connected via a Tailscale mesh network, reachable from any netw
 
 | Host | Tailscale Hostname |
 |------|--------------------|
+| blanc | `blanc.<tailnet>.ts.net` |
 | everest | `everest.<tailnet>.ts.net` |
 | campbell | `campbell.<tailnet>.ts.net` |
 | granite | `granite.<tailnet>.ts.net` |
