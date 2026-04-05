@@ -28,7 +28,7 @@ ARCH = platform.machine()
 SYSTEM = platform.system()
 
 AVAILABLE_MODULES = [
-    "base", "shell", "shell-hpc", "syncthing",
+    "base", "shell", "shell-hpc",
     "dev-c", "dev-python", "dev-node", "apps-docker",
 ]
 

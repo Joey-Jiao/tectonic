@@ -1,5 +1,6 @@
 import os
 import plistlib
+import stat
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -7,27 +8,35 @@ from typing import Any
 from tectonic import config
 from tectonic.core import distro, fs, process, ui
 
+DIR_BIN = Path.home() / ".local" / "bin"
+
 
 @dataclass
 class ServiceDef:
     name: str
-    program: str
+    type: str = "daemon"
+    program: str = ""
     args: list[str] = field(default_factory=list)
     working_directory: str | None = None
     env: dict[str, str] = field(default_factory=dict)
-    keep_alive: bool = False
+    keep_alive: bool = True
     run_at_load: bool = True
     interval: int | None = None
+    exec_cmd: str = ""
 
     @classmethod
     def from_yaml(cls, name: str, data: dict[str, Any]) -> "ServiceDef":
+        svc_type = data.get("type", "daemon")
+        if svc_type == "command":
+            return cls(name=name, type="command", exec_cmd=data["exec"])
         return cls(
             name=name,
+            type="daemon",
             program=data["program"],
             args=data.get("args", []),
             working_directory=data.get("working_directory"),
             env=data.get("env", {}),
-            keep_alive=data.get("keep_alive", False),
+            keep_alive=data.get("keep_alive", True),
             run_at_load=data.get("run_at_load", True),
             interval=data.get("interval"),
         )
@@ -49,6 +58,10 @@ class ServiceDef:
         if distro.is_macos():
             return self.plist_path
         return self.unit_path
+
+    @property
+    def bin_path(self) -> Path:
+        return DIR_BIN / self.name
 
 
 def _generate_plist(svc: ServiceDef) -> bytes:
@@ -91,7 +104,17 @@ def _generate_unit(svc: ServiceDef) -> str:
     return "\n".join(lines)
 
 
+def _generate_wrapper(svc: ServiceDef) -> str:
+    return f"#!/bin/sh\nexec {svc.exec_cmd} \"$@\"\n"
+
+
 def install_service(svc: ServiceDef) -> bool:
+    if svc.type == "command":
+        return _install_command(svc)
+    return _install_daemon(svc)
+
+
+def _install_daemon(svc: ServiceDef) -> bool:
     path = svc.service_path
     if distro.is_macos():
         content = _generate_plist(svc)
@@ -111,10 +134,26 @@ def install_service(svc: ServiceDef) -> bool:
     return True
 
 
+def _install_command(svc: ServiceDef) -> bool:
+    path = svc.bin_path
+    content = _generate_wrapper(svc)
+    if path.exists() and path.read_text() == content:
+        ui.info(f"Command already up to date: {svc.name}")
+        return False
+    fs.ensure_dir(path.parent)
+    path.write_text(content)
+    path.chmod(path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    ui.ok(f"Installed command: {path}")
+    return True
+
+
 def load_service(svc: ServiceDef) -> None:
+    if svc.type == "command":
+        _install_command(svc)
+        return
     path = svc.service_path
     if not path.exists():
-        install_service(svc)
+        _install_daemon(svc)
     if distro.is_macos():
         uid = os.getuid()
         process.run(["launchctl", "bootstrap", f"gui/{uid}", str(path)])
@@ -124,6 +163,12 @@ def load_service(svc: ServiceDef) -> None:
 
 
 def unload_service(svc: ServiceDef) -> None:
+    if svc.type == "command":
+        path = svc.bin_path
+        if path.exists():
+            path.unlink()
+            ui.ok(f"Removed command: {path}")
+        return
     path = svc.service_path
     if distro.is_macos():
         uid = os.getuid()
@@ -137,6 +182,8 @@ def unload_service(svc: ServiceDef) -> None:
 
 
 def service_status(svc: ServiceDef) -> tuple[bool, bool]:
+    if svc.type == "command":
+        return svc.bin_path.exists(), False
     installed = svc.service_path.exists()
     running = False
     if not installed:

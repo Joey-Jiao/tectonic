@@ -5,8 +5,8 @@ tectonic is a single repository for all environment-related concerns across mult
 ## Layers
 
 ```
-Layer 4: Services        launchd/systemd (MCP server, long-running processes)
-Layer 3: Data            Syncthing (workspace, misc, archive)
+Layer 4: Services        launchd/systemd + command wrappers
+Layer 3: Data            rsync over Tailscale
 Layer 2: Configuration   chezmoi (dotfiles, config files)
 Layer 1: Software        tectonic CLI (packages, tools, runtimes)
 Layer 0: Infrastructure  1Password (identity, secrets) + Tailscale (network)
@@ -19,8 +19,8 @@ Each layer has a single owner and a clear boundary:
 | 0 — Infrastructure | 1Password, Tailscale | Identity, secrets, network mesh | bare OS |
 | 1 — Software | tectonic CLI (`src/tectonic/`) | Installed packages, tools, runtimes | Layer 0 |
 | 2 — Configuration | chezmoi (`home/`) | Dotfiles, config files in `$HOME` | Layer 1 |
-| 3 — Data | Syncthing | User data (code, documents, archives) | Layer 0 |
-| 4 — Services | launchd / systemd | Long-running processes | Layer 0-2 |
+| 3 — Data | rsync over Tailscale | User data (datasets, resources) | Layer 0 |
+| 4 — Services | launchd / systemd + wrappers | Daemons and command wrappers | Layer 0-2 |
 
 Layer 3 (Data) and Layers 1-2 (Software, Configuration) are independent of each other — both only require Layer 0. Services at Layer 4 typically need software installed and configured before they can run.
 
@@ -32,7 +32,6 @@ tectonic/
 │   ├── hosts.yml             # Machine registry and desired state
 │   ├── packages/             # Per-module package lists (YAML)
 │   ├── urls.yaml
-│   └── syncignore
 ├── home/                     # chezmoi source directory (Layer 2)
 │   ├── .chezmoidata/          # symlinks to configs/ for chezmoi template data
 │   ├── dot_zshenv
@@ -41,6 +40,7 @@ tectonic/
 │   │   ├── git/
 │   │   ├── starship.toml
 │   │   └── 1Password/ssh/
+│   ├── dot_local/bin/         # bootstrap command wrappers
 │   └── dot_ssh/
 ├── src/tectonic/             # Python environment manager (Layer 1)
 │   ├── config.py
@@ -55,12 +55,12 @@ tectonic/
 │   │   ├── process.py
 │   │   ├── fs.py
 │   │   ├── host.py
+│   │   ├── services.py
 │   │   └── ui.py
 │   └── modules/
 │       ├── __init__.py       # Module registry
 │       ├── base.py
 │       ├── shell.py
-│       ├── syncthing.py
 │       ├── dev/
 │       │   ├── c.py
 │       │   ├── python.py
@@ -78,8 +78,8 @@ The machine registry (`configs/hosts.yml`). Each host declares a preset (a named
 
 ```yaml
 presets:
-  workstation: [base, shell, syncthing, dev-c, dev-python, dev-node]
-  server: [base, shell, syncthing, dev-python]
+  workstation: [base, shell, dev-c, dev-python, dev-node]
+  server: [base, shell, dev-python]
 
 hosts:
   everest:
@@ -106,7 +106,6 @@ Each module is a Python file with a `run()` entry point, registered in `modules/
 | `dev-c` | `modules/dev/c.py` | gcc, cmake, gdb, ninja |
 | `dev-python` | `modules/dev/python.py` | uv (Python version management + venv + package install) |
 | `dev-node` | `modules/dev/node.py` | Node.js LTS via package manager |
-| `syncthing` | `modules/syncthing.py` | Syncthing |
 | `apps-docker` | `modules/apps/docker.py` | Docker |
 
 ## CLI
@@ -119,6 +118,11 @@ Each module is a Python file with a `run()` entry point, registered in `modules/
 | `tectonic install --list` | List available modules |
 | `tectonic deploy <host> <cmd...>` | Execute tectonic command on a remote host via SSH |
 | `tectonic broadcast <cmd...>` | Execute tectonic command on all reachable remote hosts |
+| `tectonic services` | Deploy all services (daemons + commands) for current host |
+| `tectonic services list` | List services with configuration details |
+| `tectonic services status` | Show runtime status |
+| `tectonic services load <name>` | Install and load a service |
+| `tectonic services unload <name>` | Unload and remove a service |
 
 ## Bootstrap Flow
 
@@ -130,4 +134,4 @@ git clone <repo> && cd tectonic && uv run tectonic install
 chezmoi init --source ~/workspace/infra/tectonic/home --apply
 ```
 
-Then as needed: Syncthing pairing (Layer 3, manual one-time), launchd/systemd services (Layer 4).
+Then `tectonic services` to deploy daemons and command wrappers (Layer 4).

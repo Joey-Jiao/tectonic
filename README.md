@@ -5,8 +5,8 @@ Multi-host environment provisioning and management for macOS and Linux.
 ## Layers
 
 ```
-Layer 4: Services        launchd/systemd
-Layer 3: Data            Syncthing
+Layer 4: Services        launchd/systemd + command wrappers
+Layer 3: Data            rsync over Tailscale
 Layer 2: Configuration   chezmoi
 Layer 1: Software        tectonic CLI
 Layer 0: Infrastructure  1Password + Tailscale
@@ -41,7 +41,8 @@ tectonic
 │   └── list                         List available modules
 │
 └── services                         Deploy all services for current host
-    ├── status                       List service status
+    ├── list                         List services with configuration details
+    ├── status                       Show runtime status
     ├── load <name>                  Install and load a service
     └── unload <name>               Unload and remove a service
 ```
@@ -55,7 +56,6 @@ tectonic
 | `dev-c` | gcc, cmake, gdb, ninja |
 | `dev-python` | uv |
 | `dev-node` | Node.js LTS, pnpm |
-| `syncthing` | Syncthing |
 | `apps-docker` | Docker |
 
 ## Docs

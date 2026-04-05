@@ -3,7 +3,7 @@ import plistlib
 import pytest
 
 from tectonic.core.host import resolve_services
-from tectonic.core.service import ServiceDef, _generate_plist, _generate_unit
+from tectonic.core.services import ServiceDef, _generate_plist, _generate_unit
 
 
 SAMPLE_SERVICES_CONFIG = {
@@ -76,14 +76,14 @@ class TestServiceDef:
         assert svc.args == []
         assert svc.working_directory is None
         assert svc.env == {}
-        assert svc.keep_alive is False
+        assert svc.keep_alive is True
         assert svc.run_at_load is True
 
     def test_from_yaml_with_interval(self):
         data = SAMPLE_SERVICES_CONFIG["services"]["monitoring"]
         svc = ServiceDef.from_yaml("monitoring", data)
         assert svc.interval == 300
-        assert svc.keep_alive is False
+        assert svc.keep_alive is True
 
     def test_label(self):
         svc = ServiceDef(name="mcp-server", program="/bin/test")
@@ -156,11 +156,11 @@ class TestGenerateUnit:
 
 class TestInstallService:
     def test_install_creates_plist(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("tectonic.core.distro.is_macos", lambda: True)
+        monkeypatch.setattr("tectonic.core.services.distro.is_macos", lambda: True)
         monkeypatch.setattr("tectonic.config.DIR_LAUNCHAGENTS", tmp_path)
 
         svc = ServiceDef(name="test-svc", program="/bin/test")
-        from tectonic.core.service import install_service
+        from tectonic.core.services import install_service
         result = install_service(svc)
 
         assert result is True
@@ -170,21 +170,21 @@ class TestInstallService:
         assert content["Label"] == "dev.joeyjiao.test-svc"
 
     def test_install_skips_unchanged(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("tectonic.core.distro.is_macos", lambda: True)
+        monkeypatch.setattr("tectonic.core.services.distro.is_macos", lambda: True)
         monkeypatch.setattr("tectonic.config.DIR_LAUNCHAGENTS", tmp_path)
 
         svc = ServiceDef(name="test-svc", program="/bin/test")
-        from tectonic.core.service import install_service
+        from tectonic.core.services import install_service
         install_service(svc)
         result = install_service(svc)
         assert result is False
 
     def test_install_creates_unit(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("tectonic.core.distro.is_macos", lambda: False)
+        monkeypatch.setattr("tectonic.core.services.distro.is_macos", lambda: False)
         monkeypatch.setattr("tectonic.config.DIR_SYSTEMD_USER", tmp_path)
 
         svc = ServiceDef(name="test-svc", program="/bin/test")
-        from tectonic.core.service import install_service
+        from tectonic.core.services import install_service
         result = install_service(svc)
 
         assert result is True
@@ -193,11 +193,11 @@ class TestInstallService:
         assert "ExecStart=/bin/test" in unit_file.read_text()
 
     def test_install_unit_skips_unchanged(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("tectonic.core.distro.is_macos", lambda: False)
+        monkeypatch.setattr("tectonic.core.services.distro.is_macos", lambda: False)
         monkeypatch.setattr("tectonic.config.DIR_SYSTEMD_USER", tmp_path)
 
         svc = ServiceDef(name="test-svc", program="/bin/test")
-        from tectonic.core.service import install_service
+        from tectonic.core.services import install_service
         install_service(svc)
         result = install_service(svc)
         assert result is False
