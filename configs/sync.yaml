@@ -1,0 +1,17 @@
+exclude:
+  - .DS_Store
+  - ._*
+  - Thumbs.db
+  - "*.swp"
+  - "*.swo"
+  - "*~"
+  - "*.tmp"
+  - "*.log"
+  - "*.bak"
+
+targets:
+  - root: ~/workspace
+    paths:
+      - project/*/data
+      - resource
+  - root: ~/misc

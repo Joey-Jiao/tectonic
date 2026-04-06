@@ -31,6 +31,8 @@ tectonic/
 ├── configs/                  # Externalized configuration (packages, URLs, host registry)
 │   ├── hosts.yml             # Machine registry and desired state
 │   ├── packages/             # Per-module package lists (YAML)
+│   ├── services.yaml         # Service definitions (daemons + commands)
+│   ├── sync.yaml             # Sync paths for rsync
 │   ├── urls.yaml
 ├── home/                     # chezmoi source directory (Layer 2)
 │   ├── .chezmoidata/          # symlinks to configs/ for chezmoi template data
@@ -49,6 +51,7 @@ tectonic/
 │   │   ├── __init__.py       # App definition and command registration
 │   │   ├── install.py
 │   │   ├── services.py
+│   │   ├── sync.py           # rsync-based data push
 │   │   └── deploy.py        # deploy + broadcast
 │   ├── core/
 │   │   ├── distro.py
@@ -116,6 +119,7 @@ Each module is a Python file with a `run()` entry point, registered in `modules/
 | `tectonic install all` | Install every registered module |
 | `tectonic install <module>` | Install a single module by name |
 | `tectonic install --list` | List available modules |
+| `tectonic sync [host]` | Push workspace data to remote hosts via rsync |
 | `tectonic deploy <host> <cmd...>` | Execute tectonic command on a remote host via SSH |
 | `tectonic broadcast <cmd...>` | Execute tectonic command on all reachable remote hosts |
 | `tectonic services` | Deploy all services (daemons + commands) for current host |

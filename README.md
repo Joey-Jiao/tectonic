@@ -40,6 +40,10 @@ tectonic
 │   ├── module <name>                Install a single module by name
 │   └── list                         List available modules
 │
+├── sync [host]                      Push workspace data to remote hosts via rsync
+│   ├── [--dry-run]                  Show what would be synced
+│   └── [--delete]                   Delete files on target not present locally
+│
 └── services                         Deploy all services for current host
     ├── list                         List services with configuration details
     ├── status                       Show runtime status

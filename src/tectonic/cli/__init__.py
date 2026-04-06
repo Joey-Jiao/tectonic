@@ -3,7 +3,7 @@ from typing import Annotated
 import typer
 
 from tectonic import config
-from tectonic.cli import deploy, install, services
+from tectonic.cli import deploy, install, services, sync
 from tectonic.core import ui
 
 app = typer.Typer(
@@ -25,6 +25,8 @@ def main(
 
 app.add_typer(install.app, name="install", help="Install system modules")
 app.add_typer(services.app, name="services", help="Manage host services")
+
+app.command(name="sync")(sync.sync)
 
 _extra_args = {"allow_extra_args": True, "allow_interspersed_args": False}
 app.command(name="deploy", context_settings=_extra_args)(deploy.deploy)
