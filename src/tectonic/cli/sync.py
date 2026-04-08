@@ -43,10 +43,24 @@ def _resolve_targets(cfg: dict, target_filter: str | None = None) -> list[tuple[
     return results
 
 
+def _read_ignore_files(directory: Path, ignore_files: list[str]) -> list[str]:
+    patterns: list[str] = []
+    for name in ignore_files:
+        ignore_path = directory / name
+        if not ignore_path.is_file():
+            continue
+        for line in ignore_path.read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#"):
+                patterns.append(line)
+    return patterns
+
+
 def _rsync(src: Path, dest_host: str, dest_path: Path, excludes: list[str],
-           delete: bool, dry_run: bool) -> bool:
+           ignore_files: list[str], delete: bool, dry_run: bool) -> bool:
+    all_excludes = excludes + _read_ignore_files(src, ignore_files)
     cmd = ["rsync", "-avz"]
-    for pattern in excludes:
+    for pattern in all_excludes:
         cmd.extend(["--exclude", pattern])
     if delete:
         cmd.append("--delete")
@@ -81,6 +95,7 @@ def sync(
     """Push workspace data to remote hosts via rsync."""
     cfg = _load_sync_config()
     excludes = cfg.get("exclude", [])
+    ignore_files = cfg.get("ignore_files", [])
     resolved = _resolve_targets(cfg, root)
 
     if not resolved:
@@ -112,6 +127,6 @@ def sync(
                 else:
                     label = str(path.relative_to(root))
                 ui.info(f"  {label}")
-                _rsync(path, ssh_dest, path, excludes, delete, dry_run)
+                _rsync(path, ssh_dest, path, excludes, ignore_files, delete, dry_run)
 
     ui.ok("Sync complete")
