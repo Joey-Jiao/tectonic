@@ -73,11 +73,24 @@ def _run_services(hostname: str) -> None:
     ui.ok("Services deployed")
 
 
+def _pull_repo() -> None:
+    ui.section("Pull")
+    result = process.run(["git", "pull", "--ff-only"], cwd=config.TECTONIC_ROOT, check=False)
+    if result.returncode == 0:
+        ui.ok("Repository updated")
+    else:
+        ui.info("Pull skipped (local changes or no remote), continuing with current state")
+
+
 def apply(
     step: Annotated[
         Step | None,
         typer.Option("--step", "-s", help="Run only a specific step"),
     ] = None,
+    no_pull: Annotated[
+        bool,
+        typer.Option("--no-pull", help="Skip git pull"),
+    ] = False,
 ) -> None:
     """Converge current host to declared state."""
     hostname = host.get_hostname()
@@ -90,6 +103,9 @@ def apply(
         raise typer.Exit(code=1)
 
     ui.section(f"Apply: {hostname}")
+
+    if not no_pull:
+        _pull_repo()
 
     steps = [step] if step else [Step.packages, Step.dotfiles, Step.services]
 

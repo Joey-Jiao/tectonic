@@ -36,7 +36,7 @@ class TestApply:
 
         with patch("tectonic.cli.apply.host.get_hostname", return_value="unknownhost"), \
              patch("tectonic.cli.apply.config.HOSTS_FILE", hosts_file):
-            result = runner.invoke(app, ["apply"])
+            result = runner.invoke(app, ["apply", "--no-pull"])
 
         assert result.exit_code == 1
 
@@ -55,7 +55,7 @@ class TestApply:
              patch("tectonic.cli.apply._run_packages") as mock_pkg, \
              patch("tectonic.cli.apply._run_dotfiles") as mock_dot, \
              patch("tectonic.cli.apply._run_services") as mock_svc:
-            result = runner.invoke(app, ["apply"])
+            result = runner.invoke(app, ["apply", "--no-pull"])
 
         assert result.exit_code == 0
         mock_pkg.assert_called_once_with("testhost")
@@ -74,7 +74,7 @@ class TestApply:
              patch("tectonic.cli.apply._run_packages") as mock_pkg, \
              patch("tectonic.cli.apply._run_dotfiles") as mock_dot, \
              patch("tectonic.cli.apply._run_services") as mock_svc:
-            result = runner.invoke(app, ["apply", "--step", "packages"])
+            result = runner.invoke(app, ["apply", "--no-pull", "--step", "packages"])
 
         assert result.exit_code == 0
         mock_pkg.assert_called_once()
@@ -93,7 +93,7 @@ class TestApply:
              patch("tectonic.cli.apply._run_packages") as mock_pkg, \
              patch("tectonic.cli.apply._run_dotfiles") as mock_dot, \
              patch("tectonic.cli.apply._run_services") as mock_svc:
-            result = runner.invoke(app, ["apply", "--step", "dotfiles"])
+            result = runner.invoke(app, ["apply", "--no-pull", "--step", "dotfiles"])
 
         assert result.exit_code == 0
         mock_pkg.assert_not_called()
@@ -119,7 +119,7 @@ class TestApply:
              patch("tectonic.cli.apply._run_packages") as mock_pkg, \
              patch("tectonic.cli.apply._run_dotfiles"), \
              patch("tectonic.cli.apply._run_services"):
-            result = runner.invoke(app, ["apply"])
+            result = runner.invoke(app, ["apply", "--no-pull"])
 
         assert result.exit_code == 0
         mock_pkg.assert_called_once_with("hpc6")
