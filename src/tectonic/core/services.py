@@ -67,7 +67,8 @@ class ServiceDef:
 def _generate_plist(svc: ServiceDef) -> bytes:
     plist: dict[str, Any] = {
         "Label": svc.label,
-        "ProgramArguments": [svc.program, *svc.args],
+        "ProgramArguments": [str(Path(a).expanduser()) if "~" in a else a
+                             for a in [svc.program, *svc.args]],
         "RunAtLoad": svc.run_at_load,
     }
     if svc.working_directory:

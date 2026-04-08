@@ -32,27 +32,26 @@ tectonic/
 │   ├── hosts.yml             # Machine registry and desired state
 │   ├── packages/             # Per-module package lists (YAML)
 │   ├── services.yaml         # Service definitions (daemons + commands)
-│   ├── sync.yaml             # Sync paths for rsync
-│   ├── urls.yaml
+│   ├── sync.yaml             # Sync paths and ignore files for rsync
+│   └── urls.yaml
 ├── home/                     # chezmoi source directory (Layer 2)
-│   ├── .chezmoidata/          # symlinks to configs/ for chezmoi template data
+│   ├── .chezmoidata/         # symlinks to configs/ for chezmoi template data
 │   ├── dot_zshenv
 │   ├── dot_config/
 │   │   ├── zsh/
 │   │   ├── git/
 │   │   ├── starship.toml
 │   │   └── 1Password/ssh/
-│   ├── dot_local/bin/         # bootstrap command wrappers
 │   └── dot_ssh/
 ├── src/tectonic/             # Python environment manager (Layer 1)
 │   ├── config.py
 │   ├── base/                 # ConfigService (reads configs/ YAML)
 │   ├── cli/                  # CLI commands and app entry point
 │   │   ├── __init__.py       # App definition and command registration
-│   │   ├── install.py
-│   │   ├── services.py
+│   │   ├── apply.py          # Core apply pipeline (packages + dotfiles + services)
+│   │   ├── services.py       # Read-only service inspection (list, status)
 │   │   ├── sync.py           # rsync-based data push
-│   │   └── deploy.py        # deploy + broadcast
+│   │   └── deploy.py         # deploy + broadcast
 │   ├── core/
 │   │   ├── distro.py
 │   │   ├── process.py
@@ -60,7 +59,7 @@ tectonic/
 │   │   ├── host.py
 │   │   ├── services.py
 │   │   └── ui.py
-│   └── modules/
+│   └── modules/              # Internal install modules (not exposed in CLI)
 │       ├── __init__.py       # Module registry
 │       ├── base.py
 │       ├── shell.py
@@ -77,7 +76,7 @@ tectonic/
 
 ## hosts.yml
 
-The machine registry (`configs/hosts.yml`). Each host declares a preset (a named set of modules) and optional extra modules. The tectonic CLI reads the current hostname, looks it up in `hosts.yml`, and installs the corresponding modules.
+The machine registry (`configs/hosts.yml`). Each host declares a preset (a named set of modules) and optional extra modules. `tectonic apply` reads the current hostname, looks it up in `hosts.yml`, and converges to the declared state.
 
 ```yaml
 presets:
@@ -100,7 +99,7 @@ hosts:
 
 ## Module System
 
-Each module is a Python file with a `run()` entry point, registered in `modules/__init__.py`.
+Each module is a Python file with a `run()` entry point, registered in `modules/__init__.py`. Modules are internal to the `apply` pipeline — they are not exposed as CLI commands.
 
 | Module | Path | Contents |
 |--------|------|----------|
@@ -111,22 +110,44 @@ Each module is a Python file with a `run()` entry point, registered in `modules/
 | `dev-node` | `modules/dev/node.py` | Node.js LTS via package manager |
 | `apps-docker` | `modules/apps/docker.py` | Docker |
 
+## Apply Pipeline
+
+`tectonic apply` converges the current host to its declared state in four steps:
+
+```
+1. Pull          git pull --ff-only (get latest config)
+2. Packages      resolve host preset → run matching modules
+3. Dotfiles      chezmoi apply --source home/ --force
+4. Services      install/load services from services.yaml
+```
+
+Each step is idempotent. Use `--step packages|dotfiles|services` to run a single step, or `--no-pull` to skip the git pull.
+
 ## CLI
 
 | Command | Behavior |
 |---------|----------|
-| `tectonic install` | Detect hostname, look up preset in hosts.yml, install matching modules |
-| `tectonic install all` | Install every registered module |
-| `tectonic install <module>` | Install a single module by name |
-| `tectonic install --list` | List available modules |
+| `tectonic apply` | Converge current host to declared state (pull + packages + dotfiles + services) |
+| `tectonic apply --step packages` | Only install packages |
+| `tectonic apply --step dotfiles` | Only apply chezmoi dotfiles |
+| `tectonic apply --step services` | Only deploy services |
 | `tectonic sync [host]` | Push workspace data to remote hosts via rsync |
 | `tectonic deploy <host> <cmd...>` | Execute tectonic command on a remote host via SSH |
 | `tectonic broadcast <cmd...>` | Execute tectonic command on all reachable remote hosts |
-| `tectonic services` | Deploy all services (daemons + commands) for current host |
 | `tectonic services list` | List services with configuration details |
 | `tectonic services status` | Show runtime status |
-| `tectonic services load <name>` | Install and load a service |
-| `tectonic services unload <name>` | Unload and remove a service |
+
+## Sync
+
+`tectonic sync` pushes workspace data via rsync. Configured in `configs/sync.yaml`:
+
+- **exclude**: global patterns always excluded (`.DS_Store`, `*.log`, etc.)
+- **ignore_files**: per-directory ignore files (`.gitignore`, `.syncignore`) — if present in a sync target directory, patterns inside are also excluded
+- **targets**: root directories and path globs to sync
+
+## Deploy
+
+`tectonic deploy` and `tectonic broadcast` run commands on remote hosts via SSH. Before executing, the remote repo is reset and pulled to ensure the latest code is used.
 
 ## Bootstrap Flow
 
@@ -134,8 +155,8 @@ After Layer 0 is complete (Homebrew/apt, 1Password, Tailscale), a new machine on
 
 ```bash
 # macOS: brew install uv  |  Linux: curl -LsSf https://astral.sh/uv/install.sh | sh
-git clone <repo> && cd tectonic && uv run tectonic install
-chezmoi init --source ~/workspace/infra/tectonic/home --apply
+git clone <repo> && cd tectonic
+uv run tectonic apply
 ```
 
-Then `tectonic services` to deploy daemons and command wrappers (Layer 4).
+The first `apply` installs packages (including chezmoi), applies dotfiles, and deploys services (including the `tectonic` wrapper at `~/.local/bin/tectonic`). After that, just `tectonic apply`.

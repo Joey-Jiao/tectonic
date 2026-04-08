@@ -4,7 +4,7 @@
 
 Named after mountains. Always lowercase. The name serves as hostname, Tailscale node name, `hosts.yml` key, and SSH config `Host`.
 
-Current fleet: everest, campbell, granite.
+Current fleet: blanc, everest, campbell, granite.
 
 ### Setting the Hostname
 
@@ -36,7 +36,7 @@ Format: `<category>-<name>` for categorized modules, or a bare `<name>` for foun
 | `dev-*` | `dev-c`, `dev-python`, `dev-node` | Development languages and toolchains |
 | `apps-*` | `apps-docker` | Application-level software |
 
-Module names map directly to file paths: `dev-python` lives at `modules/dev/python.py`.
+Module names map directly to file paths: `dev-python` lives at `modules/dev/python.py`. Modules are internal to `tectonic apply` and not exposed as CLI commands.
 
 ## Config Constants
 

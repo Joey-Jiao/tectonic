@@ -21,37 +21,37 @@ After Layer 0 is in place (Homebrew/apt, 1Password, Tailscale):
 ```bash
 brew install uv          # or: curl -LsSf https://astral.sh/uv/install.sh | sh
 git clone <repo> && cd tectonic
-uv run tectonic install
-chezmoi init --source ~/workspace/infra/tectonic/home --apply
+uv run tectonic apply
 ```
+
+A single `apply` converges the host to the declared state: pulls the repo, installs packages, applies dotfiles via chezmoi, and deploys services.
 
 ## CLI
 
 ```
 tectonic
-├── * deploy <host> <command...>     Execute tectonic command on a remote host
-│   └── [--dry-run]                  Show commands without executing
+├── apply                           Converge current host to declared state
+│   ├── [--step packages|dotfiles|services]  Run only a specific step
+│   └── [--no-pull]                 Skip git pull
 │
-├── * broadcast <command...>         Execute tectonic command on all reachable hosts
-│   └── [--dry-run]                  Show commands without executing
+├── * deploy <host> <command...>    Execute tectonic command on a remote host
+│   └── [--dry-run]                 Show commands without executing
 │
-├── install                          Detect hostname, install matching modules
-│   ├── all                          Install every registered module
-│   ├── module <name>                Install a single module by name
-│   └── list                         List available modules
+├── * broadcast <command...>        Execute tectonic command on all reachable hosts
+│   └── [--dry-run]                 Show commands without executing
 │
-├── sync [host]                      Push workspace data to remote hosts via rsync
-│   ├── [--dry-run]                  Show what would be synced
-│   └── [--delete]                   Delete files on target not present locally
+├── sync [host]                     Push workspace data to remote hosts via rsync
+│   ├── [--dry-run]                 Show what would be synced
+│   └── [--delete]                  Delete files on target not present locally
 │
-└── services                         Deploy all services for current host
-    ├── list                         List services with configuration details
-    ├── status                       Show runtime status
-    ├── load <name>                  Install and load a service
-    └── unload <name>               Unload and remove a service
+└── services                        Inspect host services
+    ├── list                        List services with configuration details
+    └── status                      Show runtime status
 ```
 
 ## Modules
+
+Modules are internal to `apply` -- they are not exposed as CLI commands. The host's preset in `hosts.yml` determines which modules run.
 
 | Module | Contents |
 |--------|----------|
@@ -64,6 +64,6 @@ tectonic
 
 ## Docs
 
-- [architecture.md](docs/architecture.md) — layered model, repo layout, module system
+- [architecture.md](docs/architecture.md) — layered model, repo layout, apply flow
 - [hardware.md](docs/hardware/hardware.md) — machine fleet
 - [naming.md](docs/naming.md) — naming conventions
