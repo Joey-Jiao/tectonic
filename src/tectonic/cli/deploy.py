@@ -5,7 +5,7 @@ import typer
 from tectonic import config
 from tectonic.core import host, process, ui
 
-TECTONIC_PREFIX = "cd ~/workspace/infra/tectonic && uv run tectonic"
+TECTONIC_PREFIX = "export PATH=/opt/homebrew/bin:$HOME/.local/bin:$PATH && cd ~/workspace/infra/tectonic && uv run tectonic"
 
 
 def _run_on_targets(

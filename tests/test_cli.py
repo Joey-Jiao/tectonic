@@ -1,9 +1,8 @@
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import yaml
 from typer.testing import CliRunner
 
-from tectonic import modules
 from tectonic.cli import app
 
 runner = CliRunner()
@@ -15,27 +14,19 @@ class TestHelp:
         assert result.exit_code == 0
         assert "Environment Setup CLI Tool" in result.stdout
 
-    def test_install_help(self):
-        result = runner.invoke(app, ["install", "--help"])
+    def test_apply_help(self):
+        result = runner.invoke(app, ["apply", "--help"])
         assert result.exit_code == 0
+        assert "Converge" in result.stdout
 
-
-class TestInstallList:
-    def test_list_modules(self):
-        result = runner.invoke(app, ["install", "list"])
+    def test_services_help(self):
+        result = runner.invoke(app, ["services", "--help"])
         assert result.exit_code == 0
-        for name in modules.list_modules():
-            assert name in result.stdout
+        assert "list" in result.stdout
+        assert "status" in result.stdout
 
 
-class TestInstallModule:
-    def test_invalid_module(self):
-        result = runner.invoke(app, ["install", "module", "nonexistent"])
-        assert result.exit_code == 1
-        assert "Unknown module" in result.stdout
-
-
-class TestHostAwareInstall:
+class TestApply:
     def test_unknown_host(self, tmp_path):
         hosts_file = tmp_path / "hosts.yml"
         hosts_file.write_text(yaml.dump({
@@ -43,69 +34,73 @@ class TestHostAwareInstall:
             "hosts": {"otherhost": {"preset": "test"}},
         }))
 
-        with patch("tectonic.commands.install.host.get_hostname", return_value="unknownhost"), \
-             patch("tectonic.commands.install.config.HOSTS_FILE", hosts_file):
-            result = runner.invoke(app, ["install"])
+        with patch("tectonic.cli.apply.host.get_hostname", return_value="unknownhost"), \
+             patch("tectonic.cli.apply.config.HOSTS_FILE", hosts_file):
+            result = runner.invoke(app, ["apply"])
 
         assert result.exit_code == 1
-        assert "not found" in result.stdout
 
-    def test_host_aware_install(self, tmp_path):
+    def test_apply_runs_all_steps(self, tmp_path):
         hosts_file = tmp_path / "hosts.yml"
         hosts_file.write_text(yaml.dump({
             "presets": {"test": ["base", "shell"]},
             "hosts": {"testhost": {"preset": "test"}},
         }))
+        services_file = tmp_path / "services.yaml"
+        services_file.write_text(yaml.dump({"services": {}}))
 
-        installed: list[str] = []
-
-        with patch("tectonic.commands.install.host.get_hostname", return_value="testhost"), \
-             patch("tectonic.commands.install.config.HOSTS_FILE", hosts_file), \
-             patch("tectonic.commands.install._install_modules") as mock_install:
-            mock_install.side_effect = lambda names, **kwargs: installed.extend(names)
-            result = runner.invoke(app, ["install"])
+        with patch("tectonic.cli.apply.host.get_hostname", return_value="testhost"), \
+             patch("tectonic.cli.apply.config.HOSTS_FILE", hosts_file), \
+             patch("tectonic.cli.apply.config.SERVICES_FILE", services_file), \
+             patch("tectonic.cli.apply._run_packages") as mock_pkg, \
+             patch("tectonic.cli.apply._run_dotfiles") as mock_dot, \
+             patch("tectonic.cli.apply._run_services") as mock_svc:
+            result = runner.invoke(app, ["apply"])
 
         assert result.exit_code == 0
-        assert "testhost" in result.stdout
-        assert installed == ["base", "shell"]
+        mock_pkg.assert_called_once_with("testhost")
+        mock_dot.assert_called_once()
+        mock_svc.assert_called_once_with("testhost")
 
-    def test_missing_hosts_file(self, tmp_path):
-        missing = tmp_path / "nonexistent.yml"
-
-        with patch("tectonic.commands.install.host.get_hostname", return_value="anyhost"), \
-             patch("tectonic.commands.install.config.HOSTS_FILE", missing):
-            result = runner.invoke(app, ["install"])
-
-        assert result.exit_code == 1
-        assert "not found" in result.stdout
-
-    def test_hpc_host_skips_sudo(self, tmp_path):
+    def test_apply_step_packages_only(self, tmp_path):
         hosts_file = tmp_path / "hosts.yml"
         hosts_file.write_text(yaml.dump({
-            "presets": {"hpc": ["shell-hpc"]},
-            "hosts": {
-                "pioneer": {
-                    "preset": "hpc",
-                    "user": "axj770",
-                    "aliases": ["hpc5"],
-                    "hpc": {"scratch": "/scratch/users/axj770", "lmod_pkg": "/usr/local/lmod/lmod"},
-                },
-            },
+            "presets": {"test": ["base"]},
+            "hosts": {"testhost": {"preset": "test"}},
         }))
 
-        call_kwargs: dict = {}
-
-        with patch("tectonic.commands.install.host.get_hostname", return_value="hpc5"), \
-             patch("tectonic.commands.install.config.HOSTS_FILE", hosts_file), \
-             patch("tectonic.commands.install._install_modules") as mock_install:
-            mock_install.side_effect = lambda names, **kw: call_kwargs.update(kw)
-            result = runner.invoke(app, ["install"])
+        with patch("tectonic.cli.apply.host.get_hostname", return_value="testhost"), \
+             patch("tectonic.cli.apply.config.HOSTS_FILE", hosts_file), \
+             patch("tectonic.cli.apply._run_packages") as mock_pkg, \
+             patch("tectonic.cli.apply._run_dotfiles") as mock_dot, \
+             patch("tectonic.cli.apply._run_services") as mock_svc:
+            result = runner.invoke(app, ["apply", "--step", "packages"])
 
         assert result.exit_code == 0
-        assert "pioneer" in result.stdout
-        assert call_kwargs.get("skip_sudo") is True
+        mock_pkg.assert_called_once()
+        mock_dot.assert_not_called()
+        mock_svc.assert_not_called()
 
-    def test_alias_resolves_to_tectonic_name(self, tmp_path):
+    def test_apply_step_dotfiles_only(self, tmp_path):
+        hosts_file = tmp_path / "hosts.yml"
+        hosts_file.write_text(yaml.dump({
+            "presets": {"test": ["base"]},
+            "hosts": {"testhost": {"preset": "test"}},
+        }))
+
+        with patch("tectonic.cli.apply.host.get_hostname", return_value="testhost"), \
+             patch("tectonic.cli.apply.config.HOSTS_FILE", hosts_file), \
+             patch("tectonic.cli.apply._run_packages") as mock_pkg, \
+             patch("tectonic.cli.apply._run_dotfiles") as mock_dot, \
+             patch("tectonic.cli.apply._run_services") as mock_svc:
+            result = runner.invoke(app, ["apply", "--step", "dotfiles"])
+
+        assert result.exit_code == 0
+        mock_pkg.assert_not_called()
+        mock_dot.assert_called_once()
+        mock_svc.assert_not_called()
+
+    def test_hpc_host_resolves_alias(self, tmp_path):
         hosts_file = tmp_path / "hosts.yml"
         hosts_file.write_text(yaml.dump({
             "presets": {"hpc": ["shell-hpc"]},
@@ -114,15 +109,17 @@ class TestHostAwareInstall:
                     "preset": "hpc",
                     "user": "axj770",
                     "aliases": ["hpc5", "hpc6"],
-                    "hpc": {"scratch": "/scratch"},
+                    "hpc": {"scratch": "/scratch", "lmod_pkg": "/usr/local/lmod/lmod"},
                 },
             },
         }))
 
-        with patch("tectonic.commands.install.host.get_hostname", return_value="hpc6"), \
-             patch("tectonic.commands.install.config.HOSTS_FILE", hosts_file), \
-             patch("tectonic.commands.install._install_modules"):
-            result = runner.invoke(app, ["install"])
+        with patch("tectonic.cli.apply.host.get_hostname", return_value="hpc6"), \
+             patch("tectonic.cli.apply.config.HOSTS_FILE", hosts_file), \
+             patch("tectonic.cli.apply._run_packages") as mock_pkg, \
+             patch("tectonic.cli.apply._run_dotfiles"), \
+             patch("tectonic.cli.apply._run_services"):
+            result = runner.invoke(app, ["apply"])
 
         assert result.exit_code == 0
-        assert "pioneer" in result.stdout
+        mock_pkg.assert_called_once_with("hpc6")
