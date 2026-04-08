@@ -38,14 +38,14 @@ def set_default_shell() -> None:
         return
 
     current_shell = os.environ.get("SHELL", "")
-    if current_shell == zsh_path:
+    if Path(current_shell).name == "zsh":
         ui.info("Default shell is already zsh")
         return
 
     ui.step("Setting default shell to zsh")
 
     if distro.is_macos():
-        process.run(["chsh", "-s", zsh_path])
+        process.run_interactive(["chsh", "-s", zsh_path])
     else:
         shells = Path("/etc/shells").read_text()
         if zsh_path not in shells:

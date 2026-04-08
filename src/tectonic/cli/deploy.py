@@ -5,7 +5,7 @@ import typer
 from tectonic import config
 from tectonic.core import host, process, ui
 
-TECTONIC_PREFIX = "export PATH=/opt/homebrew/bin:$HOME/.local/bin:$PATH && cd ~/workspace/infra/tectonic && uv run tectonic"
+TECTONIC_PREFIX = "export PATH=/opt/homebrew/bin:$HOME/.local/bin:$PATH && cd ~/workspace/infra/tectonic && git reset --hard HEAD && git pull --ff-only && uv run tectonic"
 
 
 def _run_on_targets(
@@ -32,7 +32,7 @@ def _run_on_targets(
 
         ui.step(f"{target.name}")
         try:
-            process.run_interactive(["ssh", ssh_dest, remote_cmd])
+            process.run_interactive(["ssh", "-t", ssh_dest, remote_cmd])
             ui.ok(f"{target.name} done")
         except Exception as e:
             ui.error(f"{target.name} failed: {e}")
