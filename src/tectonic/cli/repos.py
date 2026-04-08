@@ -6,29 +6,29 @@ import yaml
 
 from tectonic import config
 from tectonic.cli.deploy import TECTONIC_PREFIX
-from tectonic.core import host, process, repos, ui
+from tectonic.core import host, process, repos as core_repos, ui
 
 
-def _load_pull_config() -> dict:
+def _load_repos_config() -> dict:
     with config.PULL_FILE.open() as f:
         return yaml.safe_load(f) or {}
 
 
-def _pull_local(cfg: dict, hostname: str) -> None:
+def pull_local(cfg: dict, hostname: str) -> None:
     root = Path(cfg.get("root", "~/workspace")).expanduser()
-    matched = repos.resolve_repos(hostname, cfg)
+    matched = core_repos.resolve_repos(hostname, cfg)
 
     if not matched:
         ui.info(f"No repos defined for host: {hostname}")
         return
 
     for name, url in matched.items():
-        repos.sync_repo(root, name, url)
+        core_repos.sync_repo(root, name, url)
 
 
 def _pull_remote(target: host.DeployTarget) -> None:
     ssh_dest = f"{target.user}@{target.ssh_host}"
-    remote_cmd = f"{TECTONIC_PREFIX} pull"
+    remote_cmd = f"{TECTONIC_PREFIX} repos"
     try:
         process.run_interactive(["ssh", "-t", ssh_dest, remote_cmd])
         ui.ok(f"{target.name} done")
@@ -36,7 +36,7 @@ def _pull_remote(target: host.DeployTarget) -> None:
         ui.error(f"{target.name} failed: {e}")
 
 
-def pull(
+def repos(
     hostname: str = typer.Argument(None, help="Target host (default: all)"),
     list_repos: Annotated[
         bool,
@@ -47,14 +47,14 @@ def pull(
         typer.Option("--status", "-s", help="Show repo status"),
     ] = False,
 ) -> None:
-    """Pull all repos declared for a host."""
-    cfg = _load_pull_config()
+    """Clone and pull repos declared for a host."""
+    cfg = _load_repos_config()
     local_hostname = host.get_hostname()
     root = Path(cfg.get("root", "~/workspace")).expanduser()
 
     if list_repos or status:
         target_hostname = hostname or local_hostname
-        matched = repos.resolve_repos(target_hostname, cfg)
+        matched = core_repos.resolve_repos(target_hostname, cfg)
         if not matched:
             ui.info(f"No repos defined for host: {target_hostname}")
             return
@@ -63,7 +63,7 @@ def pull(
                 ui.console.print(f"  [bold]{name}[/bold]  [dim]{url}[/dim]")
         elif status:
             for name in matched:
-                state = repos.repo_status(root, name)
+                state = core_repos.repo_status(root, name)
                 if state == "missing":
                     label = "[red]missing[/red]"
                 elif state == "dirty":
@@ -73,14 +73,14 @@ def pull(
                 ui.console.print(f"  {name}: {label}")
         return
 
-    ui.section("Pull")
+    ui.section("Repos")
 
     hosts_config = host.load_hosts(config.HOSTS_FILE)
     targets = host.resolve_deploy_targets(hosts_config)
 
     if hostname:
         if hostname == local_hostname:
-            _pull_local(cfg, local_hostname)
+            pull_local(cfg, local_hostname)
             return
         targets = [t for t in targets if t.name == hostname]
         if not targets:
@@ -92,7 +92,7 @@ def pull(
         return
 
     ui.step(local_hostname)
-    _pull_local(cfg, local_hostname)
+    pull_local(cfg, local_hostname)
 
     for target in targets:
         ui.step(f"{target.name}")

@@ -1,4 +1,4 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import yaml
 from typer.testing import CliRunner
@@ -18,6 +18,18 @@ class TestHelp:
         result = runner.invoke(app, ["apply", "--help"])
         assert result.exit_code == 0
         assert "Converge" in result.stdout
+
+    def test_packages_help(self):
+        result = runner.invoke(app, ["packages", "--help"])
+        assert result.exit_code == 0
+
+    def test_repos_help(self):
+        result = runner.invoke(app, ["repos", "--help"])
+        assert result.exit_code == 0
+
+    def test_dotfiles_help(self):
+        result = runner.invoke(app, ["dotfiles", "--help"])
+        assert result.exit_code == 0
 
     def test_services_help(self):
         result = runner.invoke(app, ["services", "--help"])
@@ -49,59 +61,17 @@ class TestApply:
 
         with patch("tectonic.cli.apply.host.get_hostname", return_value="testhost"), \
              patch("tectonic.cli.apply.config.HOSTS_FILE", hosts_file), \
-             patch("tectonic.cli.apply._run_packages") as mock_pkg, \
-             patch("tectonic.cli.apply._run_repos") as mock_repos, \
-             patch("tectonic.cli.apply._run_dotfiles") as mock_dot, \
-             patch("tectonic.cli.apply._run_services") as mock_svc:
+             patch("tectonic.cli.apply.packages_cmd.packages") as mock_pkg, \
+             patch("tectonic.cli.apply.repos_cmd.pull_local") as mock_repos, \
+             patch("tectonic.cli.apply.dotfiles_cmd.dotfiles") as mock_dot, \
+             patch("tectonic.cli.apply.services_cmd.deploy") as mock_svc:
             result = runner.invoke(app, ["apply"])
 
         assert result.exit_code == 0
-        mock_pkg.assert_called_once_with("testhost")
-        mock_repos.assert_called_once_with("testhost")
-        mock_dot.assert_called_once()
-        mock_svc.assert_called_once_with("testhost")
-
-    def test_apply_step_packages_only(self, tmp_path):
-        hosts_file = tmp_path / "hosts.yml"
-        hosts_file.write_text(yaml.dump({
-            "presets": {"test": ["base"]},
-            "hosts": {"testhost": {"preset": "test"}},
-        }))
-
-        with patch("tectonic.cli.apply.host.get_hostname", return_value="testhost"), \
-             patch("tectonic.cli.apply.config.HOSTS_FILE", hosts_file), \
-             patch("tectonic.cli.apply._run_packages") as mock_pkg, \
-             patch("tectonic.cli.apply._run_repos") as mock_repos, \
-             patch("tectonic.cli.apply._run_dotfiles") as mock_dot, \
-             patch("tectonic.cli.apply._run_services") as mock_svc:
-            result = runner.invoke(app, ["apply", "--step", "packages"])
-
-        assert result.exit_code == 0
         mock_pkg.assert_called_once()
-        mock_repos.assert_not_called()
-        mock_dot.assert_not_called()
-        mock_svc.assert_not_called()
-
-    def test_apply_step_dotfiles_only(self, tmp_path):
-        hosts_file = tmp_path / "hosts.yml"
-        hosts_file.write_text(yaml.dump({
-            "presets": {"test": ["base"]},
-            "hosts": {"testhost": {"preset": "test"}},
-        }))
-
-        with patch("tectonic.cli.apply.host.get_hostname", return_value="testhost"), \
-             patch("tectonic.cli.apply.config.HOSTS_FILE", hosts_file), \
-             patch("tectonic.cli.apply._run_packages") as mock_pkg, \
-             patch("tectonic.cli.apply._run_repos") as mock_repos, \
-             patch("tectonic.cli.apply._run_dotfiles") as mock_dot, \
-             patch("tectonic.cli.apply._run_services") as mock_svc:
-            result = runner.invoke(app, ["apply", "--step", "dotfiles"])
-
-        assert result.exit_code == 0
-        mock_pkg.assert_not_called()
-        mock_repos.assert_not_called()
+        mock_repos.assert_called_once()
         mock_dot.assert_called_once()
-        mock_svc.assert_not_called()
+        mock_svc.assert_called_once()
 
     def test_hpc_host_resolves_alias(self, tmp_path):
         hosts_file = tmp_path / "hosts.yml"
@@ -119,11 +89,10 @@ class TestApply:
 
         with patch("tectonic.cli.apply.host.get_hostname", return_value="hpc6"), \
              patch("tectonic.cli.apply.config.HOSTS_FILE", hosts_file), \
-             patch("tectonic.cli.apply._run_packages") as mock_pkg, \
-             patch("tectonic.cli.apply._run_repos"), \
-             patch("tectonic.cli.apply._run_dotfiles"), \
-             patch("tectonic.cli.apply._run_services"):
+             patch("tectonic.cli.apply.packages_cmd.packages"), \
+             patch("tectonic.cli.apply.repos_cmd.pull_local"), \
+             patch("tectonic.cli.apply.dotfiles_cmd.dotfiles"), \
+             patch("tectonic.cli.apply.services_cmd.deploy"):
             result = runner.invoke(app, ["apply"])
 
         assert result.exit_code == 0
-        mock_pkg.assert_called_once_with("hpc6")

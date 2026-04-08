@@ -2,17 +2,44 @@ import typer
 import yaml
 
 from tectonic import config
-from tectonic.core import host, services, ui
+from tectonic.core import host, services as core_services, ui
 
 app = typer.Typer()
 
 
-def _load_services() -> dict[str, services.ServiceDef]:
+def _load_services() -> dict[str, core_services.ServiceDef]:
     hostname = host.get_hostname()
     with config.SERVICES_FILE.open() as f:
         data = yaml.safe_load(f) or {}
     matched = host.resolve_services(hostname, data)
-    return {name: services.ServiceDef.from_yaml(name, defn) for name, defn in matched.items()}
+    return {name: core_services.ServiceDef.from_yaml(name, defn) for name, defn in matched.items()}
+
+
+def deploy() -> None:
+    """Deploy all services for current host."""
+    hostname = host.get_hostname()
+
+    ui.section("Services")
+
+    with config.SERVICES_FILE.open() as f:
+        data = yaml.safe_load(f) or {}
+
+    matched = host.resolve_services(hostname, data)
+
+    for name, defn in matched.items():
+        svc = core_services.ServiceDef.from_yaml(name, defn)
+        updated = core_services.install_service(svc)
+        if updated:
+            installed, running = core_services.service_status(svc)
+            if svc.type == "daemon" and installed and not running:
+                core_services.load_service(svc)
+
+    stale = core_services.find_stale_services(set(matched.keys()))
+    for svc in stale:
+        ui.info(f"Removing stale service: {svc.name}")
+        core_services.unload_service(svc)
+
+    ui.ok("Services deployed")
 
 
 @app.command(name="list")
@@ -45,7 +72,7 @@ def status() -> None:
         return
 
     for svc in loaded.values():
-        installed, running = services.service_status(svc)
+        installed, running = core_services.service_status(svc)
         if svc.type == "command":
             state = "[green]installed[/green]" if installed else "[dim]not installed[/dim]"
         elif running:
@@ -55,3 +82,11 @@ def status() -> None:
         else:
             state = "[dim]not installed[/dim]"
         ui.console.print(f"  {svc.name} ({svc.type}): {state}")
+
+
+@app.callback(invoke_without_command=True)
+def default(ctx: typer.Context) -> None:
+    """Deploy and inspect host services."""
+    if ctx.invoked_subcommand is not None:
+        return
+    deploy()

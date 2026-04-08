@@ -24,18 +24,22 @@ git clone <repo> && cd tectonic
 uv run tectonic apply
 ```
 
-A single `apply` converges the host to the declared state: pulls the repo, installs packages, clones/pulls declared repos, applies dotfiles via chezmoi, and deploys services.
+A single `apply` converges the host to the declared state: installs packages, clones/pulls repos, applies dotfiles via chezmoi, and deploys services.
 
 ## CLI
 
 ```
 tectonic
 ├── apply                           Converge current host to declared state
-│   └── [--step packages|repos|dotfiles|services]
 │
-├── pull [host]                      Pull all repos (default: all hosts)
+├── packages                        Install packages for current host
+├── repos [host]                    Clone and pull repos (default: all hosts)
 │   ├── [--list]                    List declared repos
 │   └── [--status]                  Show repo status (missing/dirty/clean)
+├── dotfiles                        Apply dotfiles via chezmoi
+├── services                        Deploy services for current host
+│   ├── list                        List services with configuration details
+│   └── status                      Show runtime status
 │
 ├── sync [host]                     Push workspace data to remote hosts via rsync
 │   ├── [--dry-run]                 Show what would be synced
@@ -44,17 +48,13 @@ tectonic
 ├── * deploy <host> <command...>    Execute tectonic command on a remote host
 │   └── [--dry-run]                 Show commands without executing
 │
-├── * broadcast <command...>        Execute tectonic command on all reachable hosts
-│   └── [--dry-run]                 Show commands without executing
-│
-└── services                        Inspect host services
-    ├── list                        List services with configuration details
-    └── status                      Show runtime status
+└── * broadcast <command...>        Execute tectonic command on all reachable hosts
+    └── [--dry-run]                 Show commands without executing
 ```
 
 ## Modules
 
-Modules are internal to `apply` -- they are not exposed as CLI commands. The host's preset in `hosts.yml` determines which modules run.
+Modules are internal to `packages` -- they are not exposed as CLI commands. The host's preset in `hosts.yml` determines which modules run.
 
 | Module | Contents |
 |--------|----------|
