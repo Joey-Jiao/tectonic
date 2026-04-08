@@ -1,5 +1,6 @@
 import os
 import plistlib
+import shutil
 import stat
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -64,11 +65,22 @@ class ServiceDef:
         return DIR_BIN / self.name
 
 
+def _resolve_program(program: str) -> str:
+    expanded = str(Path(program).expanduser())
+    if os.path.isabs(expanded):
+        return expanded
+    resolved = shutil.which(program)
+    if resolved:
+        return resolved
+    return program
+
+
 def _generate_plist(svc: ServiceDef) -> bytes:
+    program = _resolve_program(svc.program)
+    args = [str(Path(a).expanduser()) if "~" in a else a for a in svc.args]
     plist: dict[str, Any] = {
         "Label": svc.label,
-        "ProgramArguments": [str(Path(a).expanduser()) if "~" in a else a
-                             for a in [svc.program, *svc.args]],
+        "ProgramArguments": [program, *args],
         "RunAtLoad": svc.run_at_load,
     }
     if svc.working_directory:

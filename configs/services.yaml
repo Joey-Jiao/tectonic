@@ -1,12 +1,12 @@
 services:
   strata:
     type: daemon
-    program: ~/.local/bin/uv
+    program: uv
     args: [run, --project, ~/workspace/infra/strata, strata, serve, --transport, http, --port, "8716"]
     hosts: [campbell]
   strata-watch:
     type: daemon
-    program: ~/.local/bin/uv
+    program: uv
     args: [run, --project, ~/workspace/infra/strata, strata, paper, watch]
     hosts: [campbell]
   tectonic:
