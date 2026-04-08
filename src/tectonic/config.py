@@ -23,6 +23,7 @@ DIR_LAUNCHAGENTS = Path.home() / "Library" / "LaunchAgents"
 DIR_SYSTEMD_USER = XDG_CONFIG_HOME / "systemd" / "user"
 
 SERVICES_FILE = CONFIGS_DIR / "services.yaml"
+PULL_FILE = CONFIGS_DIR / "pull.yaml"
 CHEZMOI_SOURCE = TECTONIC_ROOT / "home"
 
 ARCH = platform.machine()

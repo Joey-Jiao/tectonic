@@ -1,15 +1,17 @@
 from enum import Enum
+from pathlib import Path
 from typing import Annotated
 
 import typer
 import yaml
 
 from tectonic import config, modules
-from tectonic.core import distro, host, process, services, ui
+from tectonic.core import distro, host, process, repos, services, ui
 
 
 class Step(str, Enum):
     packages = "packages"
+    repos = "repos"
     dotfiles = "dotfiles"
     services = "services"
 
@@ -31,6 +33,23 @@ def _run_packages(hostname: str) -> None:
     distro.detect()
     for name in resolved:
         modules.run_module(name)
+
+
+def _run_repos(hostname: str) -> None:
+    ui.section("Repos")
+
+    with config.PULL_FILE.open() as f:
+        cfg = yaml.safe_load(f) or {}
+
+    root = Path(cfg.get("root", "~/workspace")).expanduser()
+    matched = repos.resolve_repos(hostname, cfg)
+
+    if not matched:
+        ui.info("No repos defined for this host")
+        return
+
+    for name, url in matched.items():
+        repos.sync_repo(root, name, url)
 
 
 def _run_dotfiles() -> None:
@@ -58,9 +77,6 @@ def _run_services(hostname: str) -> None:
         data = yaml.safe_load(f) or {}
 
     matched = host.resolve_services(hostname, data)
-    if not matched:
-        ui.info("No services defined for this host")
-        return
 
     for name, defn in matched.items():
         svc = services.ServiceDef.from_yaml(name, defn)
@@ -70,16 +86,12 @@ def _run_services(hostname: str) -> None:
             if svc.type == "daemon" and installed and not running:
                 services.load_service(svc)
 
+    stale = services.find_stale_services(set(matched.keys()))
+    for svc in stale:
+        ui.info(f"Removing stale service: {svc.name}")
+        services.unload_service(svc)
+
     ui.ok("Services deployed")
-
-
-def _pull_repo() -> None:
-    ui.section("Pull")
-    result = process.run(["git", "pull", "--ff-only"], cwd=config.TECTONIC_ROOT, check=False)
-    if result.returncode == 0:
-        ui.ok("Repository updated")
-    else:
-        ui.info("Pull skipped (local changes or no remote), continuing with current state")
 
 
 def apply(
@@ -87,10 +99,6 @@ def apply(
         Step | None,
         typer.Option("--step", "-s", help="Run only a specific step"),
     ] = None,
-    no_pull: Annotated[
-        bool,
-        typer.Option("--no-pull", help="Skip git pull"),
-    ] = False,
 ) -> None:
     """Converge current host to declared state."""
     hostname = host.get_hostname()
@@ -104,13 +112,12 @@ def apply(
 
     ui.section(f"Apply: {hostname}")
 
-    if not no_pull:
-        _pull_repo()
-
-    steps = [step] if step else [Step.packages, Step.dotfiles, Step.services]
+    steps = [step] if step else [Step.packages, Step.repos, Step.dotfiles, Step.services]
 
     if Step.packages in steps:
         _run_packages(hostname)
+    if Step.repos in steps:
+        _run_repos(hostname)
     if Step.dotfiles in steps:
         _run_dotfiles()
     if Step.services in steps:

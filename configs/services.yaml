@@ -4,11 +4,6 @@ services:
     program: uv
     args: [run, --project, ~/workspace/infra/strata, strata, serve, --transport, http, --port, "8716"]
     hosts: [campbell]
-  strata-watch:
-    type: daemon
-    program: uv
-    args: [run, --project, ~/workspace/infra/strata, strata, paper, watch]
-    hosts: [campbell]
   tectonic:
     type: command
     exec: "uv run --project ~/workspace/infra/tectonic tectonic"

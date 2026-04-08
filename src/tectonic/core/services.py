@@ -194,6 +194,36 @@ def unload_service(svc: ServiceDef) -> None:
     ui.ok(f"Unloaded service: {svc.name}")
 
 
+LABEL_PREFIX = "dev.joeyjiao."
+
+
+def find_stale_services(active_names: set[str]) -> list[ServiceDef]:
+    stale: list[ServiceDef] = []
+
+    if distro.is_macos():
+        for path in config.DIR_LAUNCHAGENTS.glob(f"{LABEL_PREFIX}*.plist"):
+            name = path.stem.removeprefix(LABEL_PREFIX)
+            if name not in active_names:
+                stale.append(ServiceDef(name=name, type="daemon"))
+    else:
+        for path in config.DIR_SYSTEMD_USER.glob(f"{LABEL_PREFIX}*.service"):
+            name = path.stem.removeprefix(LABEL_PREFIX)
+            if name not in active_names:
+                stale.append(ServiceDef(name=name, type="daemon"))
+
+    for path in DIR_BIN.glob("*"):
+        if not path.is_file():
+            continue
+        try:
+            content = path.read_text()
+        except (OSError, UnicodeDecodeError):
+            continue
+        if content.startswith("#!/bin/sh\nexec ") and path.name not in active_names:
+            stale.append(ServiceDef(name=path.name, type="command"))
+
+    return stale
+
+
 def service_status(svc: ServiceDef) -> tuple[bool, bool]:
     if svc.type == "command":
         return svc.bin_path.exists(), False

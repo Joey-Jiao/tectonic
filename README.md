@@ -24,25 +24,28 @@ git clone <repo> && cd tectonic
 uv run tectonic apply
 ```
 
-A single `apply` converges the host to the declared state: pulls the repo, installs packages, applies dotfiles via chezmoi, and deploys services.
+A single `apply` converges the host to the declared state: pulls the repo, installs packages, clones/pulls declared repos, applies dotfiles via chezmoi, and deploys services.
 
 ## CLI
 
 ```
 tectonic
 ├── apply                           Converge current host to declared state
-│   ├── [--step packages|dotfiles|services]  Run only a specific step
-│   └── [--no-pull]                 Skip git pull
+│   └── [--step packages|repos|dotfiles|services]
+│
+├── pull [host]                      Pull all repos (default: all hosts)
+│   ├── [--list]                    List declared repos
+│   └── [--status]                  Show repo status (missing/dirty/clean)
+│
+├── sync [host]                     Push workspace data to remote hosts via rsync
+│   ├── [--dry-run]                 Show what would be synced
+│   └── [--delete]                  Delete files on target not present locally
 │
 ├── * deploy <host> <command...>    Execute tectonic command on a remote host
 │   └── [--dry-run]                 Show commands without executing
 │
 ├── * broadcast <command...>        Execute tectonic command on all reachable hosts
 │   └── [--dry-run]                 Show commands without executing
-│
-├── sync [host]                     Push workspace data to remote hosts via rsync
-│   ├── [--dry-run]                 Show what would be synced
-│   └── [--delete]                  Delete files on target not present locally
 │
 └── services                        Inspect host services
     ├── list                        List services with configuration details

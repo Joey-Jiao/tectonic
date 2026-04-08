@@ -28,15 +28,17 @@ Layer 3 (Data) and Layers 1-2 (Software, Configuration) are independent of each 
 
 ```
 tectonic/
-├── configs/                  # Externalized configuration (packages, URLs, host registry)
+├── configs/                  # Externalized configuration
 │   ├── hosts.yml             # Machine registry and desired state
 │   ├── packages/             # Per-module package lists (YAML)
 │   ├── services.yaml         # Service definitions (daemons + commands)
+│   ├── pull.yaml             # Repo declarations per host
 │   ├── sync.yaml             # Sync paths and ignore files for rsync
 │   └── urls.yaml
 ├── home/                     # chezmoi source directory (Layer 2)
 │   ├── .chezmoidata/         # symlinks to configs/ for chezmoi template data
 │   ├── dot_zshenv
+│   ├── dot_claude/           # Claude Code config (CLAUDE.md, mcp.json, settings.json)
 │   ├── dot_config/
 │   │   ├── zsh/
 │   │   ├── git/
@@ -48,7 +50,8 @@ tectonic/
 │   ├── base/                 # ConfigService (reads configs/ YAML)
 │   ├── cli/                  # CLI commands and app entry point
 │   │   ├── __init__.py       # App definition and command registration
-│   │   ├── apply.py          # Core apply pipeline (packages + dotfiles + services)
+│   │   ├── apply.py          # Core apply pipeline
+│   │   ├── pull.py           # Repo clone/pull
 │   │   ├── services.py       # Read-only service inspection (list, status)
 │   │   ├── sync.py           # rsync-based data push
 │   │   └── deploy.py         # deploy + broadcast
@@ -57,6 +60,7 @@ tectonic/
 │   │   ├── process.py
 │   │   ├── fs.py
 │   │   ├── host.py
+│   │   ├── repos.py          # Repo resolution, clone/pull, status
 │   │   ├── services.py
 │   │   └── ui.py
 │   └── modules/              # Internal install modules (not exposed in CLI)
@@ -112,30 +116,52 @@ Each module is a Python file with a `run()` entry point, registered in `modules/
 
 ## Apply Pipeline
 
-`tectonic apply` converges the current host to its declared state in four steps:
+`tectonic apply` converges the current host to its declared state in five steps:
 
 ```
-1. Pull          git pull --ff-only (get latest config)
-2. Packages      resolve host preset → run matching modules
+1. Packages      resolve host preset → run matching modules
+2. Repos         clone missing repos, pull existing (from pull.yaml)
 3. Dotfiles      chezmoi apply --source home/ --force
-4. Services      install/load services from services.yaml
+4. Services      install/load services, remove stale ones
 ```
 
-Each step is idempotent. Use `--step packages|dotfiles|services` to run a single step, or `--no-pull` to skip the git pull.
+Each step is idempotent. Use `--step packages|repos|dotfiles|services` to run a single step.
 
 ## CLI
 
 | Command | Behavior |
 |---------|----------|
-| `tectonic apply` | Converge current host to declared state (pull + packages + dotfiles + services) |
+| `tectonic apply` | Converge current host to declared state (packages + repos + dotfiles + services) |
 | `tectonic apply --step packages` | Only install packages |
+| `tectonic apply --step repos` | Only clone/pull declared repos |
 | `tectonic apply --step dotfiles` | Only apply chezmoi dotfiles |
 | `tectonic apply --step services` | Only deploy services |
+| `tectonic pull [host]` | Pull all repos (default: all hosts) |
+| `tectonic pull --list` | List declared repos for current host |
+| `tectonic pull --status` | Show repo status (missing/dirty/clean) |
 | `tectonic sync [host]` | Push workspace data to remote hosts via rsync |
 | `tectonic deploy <host> <cmd...>` | Execute tectonic command on a remote host via SSH |
 | `tectonic broadcast <cmd...>` | Execute tectonic command on all reachable remote hosts |
 | `tectonic services list` | List services with configuration details |
 | `tectonic services status` | Show runtime status |
+
+## Pull
+
+`tectonic pull` manages git repos declared in `configs/pull.yaml`:
+
+```yaml
+root: ~/workspace
+
+repos:
+  infra/tectonic:
+    url: git@github.com:Joey-Jiao/tectonic.git
+    hosts: [blanc, everest, campbell, granite]
+  infra/strata:
+    url: git@github.com:Joey-Jiao/strata.git
+    hosts: [blanc, campbell]
+```
+
+Repos are resolved relative to `root`. Missing repos are cloned, existing repos are pulled (`--ff-only`). Also runs as part of `tectonic apply`.
 
 ## Sync
 
@@ -147,7 +173,7 @@ Each step is idempotent. Use `--step packages|dotfiles|services` to run a single
 
 ## Deploy
 
-`tectonic deploy` and `tectonic broadcast` run commands on remote hosts via SSH. Before executing, the remote repo is reset and pulled to ensure the latest code is used.
+`tectonic deploy` and `tectonic broadcast` run commands on remote hosts via SSH. Before executing, the remote tectonic repo is reset and pulled to ensure the latest code is used.
 
 ## Bootstrap Flow
 
@@ -159,4 +185,4 @@ git clone <repo> && cd tectonic
 uv run tectonic apply
 ```
 
-The first `apply` installs packages (including chezmoi), applies dotfiles, and deploys services (including the `tectonic` wrapper at `~/.local/bin/tectonic`). After that, just `tectonic apply`.
+The first `apply` installs packages (including chezmoi), clones declared repos, applies dotfiles, and deploys services (including the `tectonic` wrapper at `~/.local/bin/tectonic`). After that, just `tectonic apply`.
