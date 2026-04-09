@@ -32,7 +32,7 @@ tectonic/
 │   ├── hosts.yml             # Machine registry and desired state
 │   ├── packages/             # Per-module package lists (YAML)
 │   ├── services.yaml         # Service definitions (daemons + commands)
-│   ├── pull.yaml             # Repo declarations per host
+│   ├── repos.yaml             # Repo declarations per host
 │   ├── sync.yaml             # Sync paths and ignore files for rsync
 │   └── urls.yaml
 ├── home/                     # chezmoi source directory (Layer 2)
@@ -122,7 +122,7 @@ Each module is a Python file with a `run()` entry point, registered in `modules/
 
 ```
 1. packages      resolve host preset → run matching modules
-2. repos         clone missing repos, pull existing (from pull.yaml)
+2. repos         clone missing repos, pull existing (from repos.yaml)
 3. dotfiles      chezmoi apply --source home/ --force
 4. services      install/load services, remove stale ones
 ```
@@ -157,7 +157,7 @@ Each command operates on the current host only. Use `deploy`/`broadcast` to run 
 
 ## Repos
 
-`tectonic repos` manages git repos declared in `configs/pull.yaml`:
+`tectonic repos` manages git repos declared in `configs/repos.yaml`:
 
 ```yaml
 root: ~/workspace

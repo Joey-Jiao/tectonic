@@ -1,0 +1,39 @@
+root: ~/workspace
+
+repos:
+  infra/tectonic:
+    url: git@github.com:Joey-Jiao/tectonic.git
+    hosts: [blanc, everest, campbell, granite]
+  infra/strata:
+    url: git@github.com:Joey-Jiao/strata.git
+    hosts: [blanc, everest, campbell, granite]
+  infra/metro:
+    url: git@github.com:Joey-Jiao/metro.git
+    hosts: [blanc, everest, campbell, granite]
+
+
+  project/AmpliFedDP/amplifeddp:
+    url: git@github.com:Joey-Jiao/AmpliFedDP.git
+    hosts: [blanc, everest, campbell, granite]
+  project/NoisySelection/ns:
+    url: git@github.com:Joey-Jiao/NoisySelection.git
+    hosts: [blanc, everest, campbell, granite]
+  project/QueryScene/qs:
+    url: git@github.com:wang-mengying/Query_Scene.git
+    hosts: [blanc, everest, campbell, granite]
+  project/QueryScene/nl2graph:
+    url: git@github.com:Joey-Jiao/nl2graph.git
+    hosts: [blanc, everest, campbell, granite]
+  project/SerenGD/serengd:
+    url: git@github.com:Joey-Jiao/SerenGD.git
+    hosts: [blanc, everest, campbell, granite]
+
+  site/joeyjiao.github.io:
+    url: git@github.com:Joey-Jiao/joeyjiao.github.io.git
+    hosts: [blanc, everest, campbell, granite]
+  site/paperatlas:
+    url: git@github.com:Joey-Jiao/paperatlas.git
+    hosts: [blanc, everest, campbell, granite]
+  site/powergrid:
+    url: git@github.com:Joey-Jiao/powergrid.git
+    hosts: [blanc, everest, campbell, granite]

@@ -4,9 +4,9 @@ from typing import Any
 from tectonic.core import process, ui
 
 
-def resolve_repos(hostname: str, pull_config: dict[str, Any]) -> dict[str, str]:
+def resolve_repos(hostname: str, repos_config: dict[str, Any]) -> dict[str, str]:
     result: dict[str, str] = {}
-    for name, defn in pull_config.get("repos", {}).items():
+    for name, defn in repos_config.get("repos", {}).items():
         if hostname in defn.get("hosts", []):
             result[name] = defn["url"]
     return result

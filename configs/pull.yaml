@@ -1,9 +1,0 @@
-root: ~/workspace
-
-repos:
-  infra/tectonic:
-    url: git@github.com:Joey-Jiao/tectonic.git
-    hosts: [blanc, everest, campbell, granite]
-  infra/strata:
-    url: git@github.com:Joey-Jiao/strata.git
-    hosts: [blanc, campbell]

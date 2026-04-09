@@ -9,7 +9,7 @@ from tectonic.core import host, repos as core_repos, ui
 
 
 def _load_repos_config() -> dict:
-    with config.PULL_FILE.open() as f:
+    with config.REPOS_FILE.open() as f:
         return yaml.safe_load(f) or {}
 
 
