@@ -131,18 +131,29 @@ Each step is idempotent and available as a standalone command.
 
 ## CLI
 
+### Local commands
+
+Each command operates on the current host only. Use `deploy`/`broadcast` to run them remotely.
+
 | Command | Behavior |
 |---------|----------|
 | `tectonic apply` | Converge current host (packages → repos → dotfiles → services) |
-| `tectonic packages` | Install packages for current host |
-| `tectonic repos [host]` | Clone and pull repos (default: all hosts) |
+| `tectonic packages` | Install packages based on host preset |
+| `tectonic repos` | Clone missing and pull existing repos |
 | `tectonic dotfiles` | Apply dotfiles via chezmoi |
-| `tectonic services` | Deploy services for current host |
+| `tectonic services` | Deploy services, remove stale ones |
 | `tectonic services list` | List services with configuration details |
 | `tectonic services status` | Show runtime status |
+
+### Remote commands
+
+| Command | Behavior |
+|---------|----------|
+| `tectonic deploy <host> <cmd...>` | Run any tectonic command on a remote host via SSH |
+| `tectonic broadcast <cmd...>` | Run any tectonic command on all remote hosts |
 | `tectonic sync [host]` | Push workspace data to remote hosts via rsync |
-| `tectonic deploy <host> <cmd...>` | Execute tectonic command on a remote host via SSH |
-| `tectonic broadcast <cmd...>` | Execute tectonic command on all reachable remote hosts |
+
+`deploy` and `broadcast` can run any local command remotely (e.g. `tectonic broadcast apply`). `sync` is different — it pushes data from local to remote, not remote execution.
 
 ## Repos
 
@@ -160,7 +171,7 @@ repos:
     hosts: [blanc, campbell]
 ```
 
-Repos are resolved relative to `root`. Missing repos are cloned, existing repos are pulled (`--ff-only`). Also runs as part of `tectonic apply`. Use `tectonic repos --list` and `tectonic repos --status` for inspection.
+Repos are resolved relative to `root`. Missing repos are cloned, existing repos are pulled (`--ff-only`). Also runs as part of `tectonic apply`. Use `--list` and `--status` for inspection. Use `tectonic deploy campbell repos` to pull on a remote host.
 
 ## Sync
 

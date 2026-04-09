@@ -24,37 +24,37 @@ git clone <repo> && cd tectonic
 uv run tectonic apply
 ```
 
-A single `apply` converges the host to the declared state: installs packages, clones/pulls repos, applies dotfiles via chezmoi, and deploys services.
-
 ## CLI
 
 ```
 tectonic
-├── apply                           Converge current host to declared state
 │
-├── packages                        Install packages for current host
-├── repos [host]                    Clone and pull repos (default: all hosts)
+│ Local (current host only, use deploy/broadcast for remote)
+├── apply                           Converge: packages → repos → dotfiles → services
+├── packages                        Install packages based on host preset
+├── repos                           Clone missing and pull existing repos
 │   ├── [--list]                    List declared repos
 │   └── [--status]                  Show repo status (missing/dirty/clean)
 ├── dotfiles                        Apply dotfiles via chezmoi
-├── services                        Deploy services for current host
+├── services                        Deploy services, remove stale ones
 │   ├── list                        List services with configuration details
 │   └── status                      Show runtime status
 │
-├── sync [host]                     Push workspace data to remote hosts via rsync
-│   ├── [--dry-run]                 Show what would be synced
-│   └── [--delete]                  Delete files on target not present locally
-│
-├── * deploy <host> <command...>    Execute tectonic command on a remote host
+│ Remote
+├── * deploy <host> <command...>    Run any tectonic command on a remote host
+│   └── [--dry-run]                 Show commands without executing
+├── * broadcast <command...>        Run any tectonic command on all remote hosts
 │   └── [--dry-run]                 Show commands without executing
 │
-└── * broadcast <command...>        Execute tectonic command on all reachable hosts
-    └── [--dry-run]                 Show commands without executing
+│ Data
+└── sync [host]                     Push workspace data via rsync (default: all hosts)
+    ├── [--dry-run]                 Show what would be synced
+    └── [--delete]                  Delete files on target not present locally
 ```
 
 ## Modules
 
-Modules are internal to `packages` -- they are not exposed as CLI commands. The host's preset in `hosts.yml` determines which modules run.
+Modules are internal to `packages` — not exposed as CLI commands. The host's preset in `hosts.yml` determines which modules run.
 
 | Module | Contents |
 |--------|----------|

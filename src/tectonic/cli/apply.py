@@ -22,7 +22,7 @@ def apply() -> None:
     ui.section(f"Apply: {hostname}")
 
     packages_cmd.packages()
-    repos_cmd.pull_local(repos_cmd._load_repos_config(), hostname)
+    repos_cmd.repos()
     dotfiles_cmd.dotfiles()
     services_cmd.deploy()
 

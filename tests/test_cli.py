@@ -62,7 +62,7 @@ class TestApply:
         with patch("tectonic.cli.apply.host.get_hostname", return_value="testhost"), \
              patch("tectonic.cli.apply.config.HOSTS_FILE", hosts_file), \
              patch("tectonic.cli.apply.packages_cmd.packages") as mock_pkg, \
-             patch("tectonic.cli.apply.repos_cmd.pull_local") as mock_repos, \
+             patch("tectonic.cli.apply.repos_cmd.repos") as mock_repos, \
              patch("tectonic.cli.apply.dotfiles_cmd.dotfiles") as mock_dot, \
              patch("tectonic.cli.apply.services_cmd.deploy") as mock_svc:
             result = runner.invoke(app, ["apply"])
@@ -90,7 +90,7 @@ class TestApply:
         with patch("tectonic.cli.apply.host.get_hostname", return_value="hpc6"), \
              patch("tectonic.cli.apply.config.HOSTS_FILE", hosts_file), \
              patch("tectonic.cli.apply.packages_cmd.packages"), \
-             patch("tectonic.cli.apply.repos_cmd.pull_local"), \
+             patch("tectonic.cli.apply.repos_cmd.repos"), \
              patch("tectonic.cli.apply.dotfiles_cmd.dotfiles"), \
              patch("tectonic.cli.apply.services_cmd.deploy"):
             result = runner.invoke(app, ["apply"])
