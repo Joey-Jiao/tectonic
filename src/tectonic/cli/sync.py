@@ -58,6 +58,9 @@ def _read_ignore_files(directory: Path, ignore_files: list[str]) -> list[str]:
 
 def _rsync(src: Path, dest_host: str, dest_path: Path, excludes: list[str],
            ignore_files: list[str], delete: bool, dry_run: bool) -> bool:
+    if not dry_run:
+        process.run(["ssh", dest_host, f"mkdir -p {dest_path}"], check=False)
+
     all_excludes = excludes + _read_ignore_files(src, ignore_files)
     cmd = ["rsync", "-avz"]
     for pattern in all_excludes:
