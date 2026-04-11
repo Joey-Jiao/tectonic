@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "strata": {
-      "type": "http",
-      "url": "http://campbell:8716/mcp/"
-    }
-  }
-}

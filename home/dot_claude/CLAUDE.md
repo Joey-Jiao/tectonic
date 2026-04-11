@@ -1,11 +1,15 @@
 # Global Instructions
 
 ## Context
-At the start of a session, call `profile_context` to understand who I am,
+At the start of a session, call `info_context` to understand who I am,
 my workspace, and infrastructure.
 
+## Modes
+At the start of a work session, the user will specify the mode. Load the appropriate guide:
+- **Coding**: call `info_conventions` and follow it strictly for all code changes
+- **Reading papers**: call `info_reading` for the reading workflow, note-taking format, and available tools
+
 ## Code
-- Before every significant code change, call `profile_conventions` and follow the conventions strictly
 - Read existing code before modifying — understand the established design patterns first
 - New code must fit the existing architecture; never introduce patterns that diverge from what's already established
 - No band-aid fixes, no temporary workarounds, no appeasement code — solve problems at the right layer
