@@ -1,13 +1,14 @@
 # Global Instructions
 
 ## Context
-At the start of a session, call `info_context` to understand who I am,
-my workspace, and infrastructure.
+At the start of every session, ask the user to run `/mcp__strata__context`
+so you understand who I am, my workspace, and infrastructure.
 
 ## Modes
-At the start of a work session, the user will specify the mode. Load the appropriate guide:
-- **Coding**: call `info_conventions` and follow it strictly for all code changes
-- **Reading papers**: call `info_reading` for the reading workflow, note-taking format, and available tools
+At the start of a work session, the user will specify the mode and run
+the corresponding strata prompt. Treat its output as authoritative:
+- **Coding** → user runs `/mcp__strata__code`; follow those conventions strictly
+- **Reading papers** → user runs `/mcp__strata__read`; follow that workflow exactly
 
 ## Code
 - Read existing code before modifying — understand the established design patterns first
