@@ -175,6 +175,20 @@ def load_service(svc: ServiceDef) -> None:
     ui.ok(f"Loaded service: {svc.name}")
 
 
+def restart_service(svc: ServiceDef) -> None:
+    if svc.type == "command":
+        return
+    if distro.is_macos():
+        uid = os.getuid()
+        process.run(
+            ["launchctl", "kickstart", "-k", f"gui/{uid}/{svc.label}"],
+            check=False,
+        )
+    else:
+        process.run(["systemctl", "--user", "restart", svc.label], check=False)
+    ui.ok(f"Restarted service: {svc.name}")
+
+
 def unload_service(svc: ServiceDef) -> None:
     if svc.type == "command":
         path = svc.bin_path

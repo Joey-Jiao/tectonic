@@ -28,10 +28,12 @@ def deploy() -> None:
 
     for name, defn in matched.items():
         svc = core_services.ServiceDef.from_yaml(name, defn)
-        updated = core_services.install_service(svc)
-        if updated:
+        core_services.install_service(svc)
+        if svc.type == "daemon":
             installed, running = core_services.service_status(svc)
-            if svc.type == "daemon" and installed and not running:
+            if installed and running:
+                core_services.restart_service(svc)
+            elif installed:
                 core_services.load_service(svc)
 
     stale = core_services.find_stale_services(set(matched.keys()))
