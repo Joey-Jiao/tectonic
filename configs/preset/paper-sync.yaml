@@ -3,6 +3,6 @@ requirements:
   repos: [infra/strata]
 steps:
   - strata paper sync
-  - tectonic sync
+  - tectonic sync campbell
   - tectonic deploy campbell repos
   - tectonic deploy campbell services
