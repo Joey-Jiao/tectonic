@@ -3,17 +3,9 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
-import yaml
 
 from tectonic import config
 from tectonic.core import host, process, ui
-
-SYNC_CONFIG = config.CONFIGS_DIR / "sync.yaml"
-
-
-def _load_sync_config() -> dict:
-    with SYNC_CONFIG.open() as f:
-        return yaml.safe_load(f) or {}
 
 
 def _expand_paths(root: Path, patterns: list[str]) -> list[Path]:
@@ -24,9 +16,9 @@ def _expand_paths(root: Path, patterns: list[str]) -> list[Path]:
     return paths
 
 
-def _resolve_targets(cfg: dict, target_filter: str | None = None) -> list[tuple[Path, list[Path]]]:
+def _resolve_targets(targets: list, target_filter: str | None = None) -> list[tuple[Path, list[Path]]]:
     results = []
-    for target in cfg.get("targets", []):
+    for target in targets:
         root = Path(target["root"]).expanduser()
         if target_filter and root.name != target_filter:
             continue
@@ -96,39 +88,39 @@ def sync(
     ] = False,
 ) -> None:
     """Push workspace data to remote hosts via rsync."""
-    cfg = _load_sync_config()
-    excludes = cfg.get("exclude", [])
-    ignore_files = cfg.get("ignore_files", [])
-    resolved = _resolve_targets(cfg, root)
+    excludes = config.configs.get("sync.exclude", [])
+    ignore_files = config.configs.get("sync.ignore_files", [])
+    targets = config.configs.get("sync.targets", [])
+    resolved = _resolve_targets(targets, root)
 
     if not resolved:
         ui.info("No sync targets resolved")
         return
 
-    hosts_config = host.load_hosts(config.HOSTS_FILE)
-    targets = host.resolve_deploy_targets(hosts_config)
+    hosts_config = host.load_hosts(config.configs)
+    deploy_targets = host.resolve_deploy_targets(hosts_config)
 
     if hostname:
-        targets = [t for t in targets if t.name == hostname]
-        if not targets:
+        deploy_targets = [t for t in deploy_targets if t.name == hostname]
+        if not deploy_targets:
             ui.error(f"Host '{hostname}' is not a valid sync target")
             raise typer.Exit(code=1)
 
-    if not targets:
+    if not deploy_targets:
         ui.info("No sync targets found")
         return
 
     ui.section("Sync" + (" (dry-run)" if dry_run else ""))
 
-    for target in targets:
+    for target in deploy_targets:
         ssh_dest = f"{target.user}@{target.ssh_host}"
         ui.step(f"{target.name}")
-        for root, paths in resolved:
+        for sync_root, paths in resolved:
             for path in paths:
-                if path == root:
-                    label = root.name
+                if path == sync_root:
+                    label = sync_root.name
                 else:
-                    label = str(path.relative_to(root))
+                    label = str(path.relative_to(sync_root))
                 ui.info(f"  {label}")
                 _rsync(path, ssh_dest, path, excludes, ignore_files, delete, dry_run)
 

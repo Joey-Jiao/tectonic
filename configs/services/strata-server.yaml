@@ -1,0 +1,4 @@
+type: daemon
+program: uv
+args: [run, --project, ~/workspace/infra/strata, strata, serve, --transport, http, --port, "8716"]
+hosts: [campbell]

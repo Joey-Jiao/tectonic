@@ -2,15 +2,9 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
-import yaml
 
 from tectonic import config
 from tectonic.core import host, repos as core_repos, ui
-
-
-def _load_repos_config() -> dict:
-    with config.REPOS_FILE.open() as f:
-        return yaml.safe_load(f) or {}
 
 
 def repos(
@@ -24,10 +18,9 @@ def repos(
     ] = False,
 ) -> None:
     """Clone and pull repos declared for current host."""
-    cfg = _load_repos_config()
     hostname = host.get_hostname()
-    root = Path(cfg.get("root", "~/workspace")).expanduser()
-    matched = core_repos.resolve_repos(hostname, cfg)
+    root = Path(config.configs.get("repos.root", "~/workspace")).expanduser()
+    matched = core_repos.resolve_repos(hostname, config.configs.get("repos.repos", {}))
 
     if not matched:
         ui.info(f"No repos defined for host: {hostname}")

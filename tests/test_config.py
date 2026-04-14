@@ -12,9 +12,6 @@ class TestPaths:
         assert config.CONFIGS_DIR.exists()
         assert config.CONFIGS_DIR == config.TECTONIC_ROOT / "configs"
 
-    def test_hosts_file_path(self):
-        assert config.HOSTS_FILE == config.CONFIGS_DIR / "hosts.yml"
-
     def test_xdg_paths_are_under_home(self):
         home = Path.home()
         assert config.XDG_CONFIG_HOME == home / ".config"
@@ -34,15 +31,14 @@ class TestPaths:
         assert isinstance(config.ARCH, str)
         assert isinstance(config.SYSTEM, str)
 
-    def test_available_modules(self):
-        assert "base" in config.AVAILABLE_MODULES
-        assert "shell" in config.AVAILABLE_MODULES
-        assert "dev-python" in config.AVAILABLE_MODULES
-
 
 class TestConfigService:
     def test_configs_instance_exists(self):
         assert config.configs is not None
+
+    def test_hosts_config(self):
+        hosts = config.configs.get("hosts.hosts")
+        assert isinstance(hosts, dict)
 
     def test_packages_base(self):
         packages = config.configs.get("packages.base.brew")

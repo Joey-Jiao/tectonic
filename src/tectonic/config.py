@@ -5,7 +5,6 @@ from tectonic.base import ConfigService
 
 TECTONIC_ROOT = Path(__file__).parent.parent.parent
 CONFIGS_DIR = TECTONIC_ROOT / "configs"
-HOSTS_FILE = CONFIGS_DIR / "hosts.yml"
 
 XDG_CONFIG_HOME = Path.home() / ".config"
 XDG_DATA_HOME = Path.home() / ".local" / "share"
@@ -22,16 +21,9 @@ DIR_LOCAL = Path.home() / ".local"
 DIR_LAUNCHAGENTS = Path.home() / "Library" / "LaunchAgents"
 DIR_SYSTEMD_USER = XDG_CONFIG_HOME / "systemd" / "user"
 
-SERVICES_FILE = CONFIGS_DIR / "services.yaml"
-REPOS_FILE = CONFIGS_DIR / "repos.yaml"
 CHEZMOI_SOURCE = TECTONIC_ROOT / "home"
 
 ARCH = platform.machine()
 SYSTEM = platform.system()
-
-AVAILABLE_MODULES = [
-    "base", "shell", "shell-hpc",
-    "dev-c", "dev-python", "dev-node", "apps-docker",
-]
 
 configs = ConfigService(config_dir=CONFIGS_DIR)

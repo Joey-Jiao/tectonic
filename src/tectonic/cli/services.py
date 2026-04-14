@@ -1,5 +1,4 @@
 import typer
-import yaml
 
 from tectonic import config
 from tectonic.core import host, services as core_services, ui
@@ -9,9 +8,7 @@ app = typer.Typer()
 
 def _load_services() -> dict[str, core_services.ServiceDef]:
     hostname = host.get_hostname()
-    with config.SERVICES_FILE.open() as f:
-        data = yaml.safe_load(f) or {}
-    matched = host.resolve_services(hostname, data)
+    matched = host.resolve_services(hostname, config.configs)
     return {name: core_services.ServiceDef.from_yaml(name, defn) for name, defn in matched.items()}
 
 
@@ -21,10 +18,7 @@ def deploy() -> None:
 
     ui.section("Services")
 
-    with config.SERVICES_FILE.open() as f:
-        data = yaml.safe_load(f) or {}
-
-    matched = host.resolve_services(hostname, data)
+    matched = host.resolve_services(hostname, config.configs)
 
     for name, defn in matched.items():
         svc = core_services.ServiceDef.from_yaml(name, defn)

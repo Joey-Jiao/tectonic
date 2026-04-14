@@ -5,7 +5,7 @@ import typer
 from tectonic import config
 from tectonic.core import host, process, ui
 
-TECTONIC_PREFIX = "export PATH=/opt/homebrew/bin:$HOME/.local/bin:$PATH && cd ~/workspace/infra/tectonic && git reset --hard HEAD && git pull --ff-only && uv run tectonic"
+TECTONIC_PREFIX = "tectonic repos; tectonic"
 
 
 def _run_on_targets(
@@ -47,7 +47,7 @@ def deploy(
     ] = False,
 ) -> None:
     """Execute a tectonic command on a remote host via SSH."""
-    hosts_config = host.load_hosts(config.HOSTS_FILE)
+    hosts_config = host.load_hosts(config.configs)
     targets = host.resolve_deploy_targets(hosts_config)
 
     targets = [t for t in targets if t.name == hostname]
@@ -67,7 +67,7 @@ def broadcast(
     ] = False,
 ) -> None:
     """Execute a tectonic command on all reachable remote hosts."""
-    hosts_config = host.load_hosts(config.HOSTS_FILE)
+    hosts_config = host.load_hosts(config.configs)
     targets = host.resolve_deploy_targets(hosts_config)
 
     ui.section("Broadcast")

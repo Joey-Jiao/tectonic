@@ -5,7 +5,7 @@ from tectonic.core import distro, host, process, ui
 def packages() -> None:
     """Install packages for current host."""
     hostname = host.get_hostname()
-    hosts_config = host.load_hosts(config.HOSTS_FILE)
+    hosts_config = host.load_hosts(config.configs)
     _, host_entry = host.find_host(hostname, hosts_config)
     resolved = host.resolve_modules(hostname, hosts_config)
     is_hpc = "hpc" in host_entry

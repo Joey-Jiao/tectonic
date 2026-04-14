@@ -1,9 +1,8 @@
 import socket
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 
-import yaml
+from tectonic.base import ConfigService
 
 
 @dataclass
@@ -17,10 +16,11 @@ def get_hostname() -> str:
     return socket.gethostname().split(".")[0].lower()
 
 
-def load_hosts(path: Path) -> dict[str, Any]:
-    with path.open() as f:
-        data: dict[str, Any] = yaml.safe_load(f)
-    return data
+def load_hosts(configs: ConfigService) -> dict[str, Any]:
+    return {
+        "presets": configs.get("hosts.presets", {}),
+        "hosts": configs.get("hosts.hosts", {}),
+    }
 
 
 def resolve_deploy_targets(hosts_config: dict[str, Any]) -> list[DeployTarget]:
@@ -50,12 +50,19 @@ def find_host(hostname: str, hosts_config: dict[str, Any]) -> tuple[str, dict[st
     for name, entry in hosts.items():
         if hostname in entry.get("aliases", []):
             return name, entry
-    raise KeyError(f"Host '{hostname}' not found in hosts.yml")
+    raise KeyError(f"Host '{hostname}' not found in hosts config")
 
 
-def resolve_services(hostname: str, services_config: dict[str, Any]) -> dict[str, Any]:
-    result: dict[str, Any] = {}
-    for name, definition in services_config.get("services", {}).items():
+def resolve_services(hostname: str, configs: Any) -> dict[str, Any]:
+    if isinstance(configs, ConfigService):
+        result: dict[str, Any] = {}
+        for name in configs.list_files("services"):
+            defn = configs.get(f"services.{name}", {})
+            if hostname in defn.get("hosts", []):
+                result[name] = defn
+        return result
+    result = {}
+    for name, definition in configs.get("services", {}).items():
         if hostname in definition.get("hosts", []):
             result[name] = definition
     return result

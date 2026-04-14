@@ -13,8 +13,8 @@ def apply() -> None:
     hostname = host.get_hostname()
 
     try:
-        host.load_hosts(config.HOSTS_FILE)
-        host.find_host(hostname, host.load_hosts(config.HOSTS_FILE))
+        hosts_config = host.load_hosts(config.configs)
+        host.find_host(hostname, hosts_config)
     except (FileNotFoundError, KeyError) as e:
         ui.error(f"Host resolution failed: {e}")
         raise typer.Exit(code=1)

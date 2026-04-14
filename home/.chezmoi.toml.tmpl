@@ -1,4 +1,4 @@
-{{- $hostsRaw := output "cat" (joinPath .chezmoi.sourceDir ".." "configs" "hosts.yml") -}}
+{{- $hostsRaw := output "cat" (joinPath .chezmoi.sourceDir ".." "configs" "hosts.yaml") -}}
 {{- $hostsData := $hostsRaw | fromYaml -}}
 {{- $hostname := .chezmoi.hostname -}}
 {{- $hosttype := "standard" -}}

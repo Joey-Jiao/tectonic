@@ -1,0 +1,3 @@
+type: command
+exec: "uv run --project ~/workspace/infra/tectonic tectonic"
+hosts: [blanc, everest, campbell, granite]
