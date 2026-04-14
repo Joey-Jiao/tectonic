@@ -1,0 +1,8 @@
+description: Sync paper library and deploy to campbell
+requirements:
+  repos: [infra/strata]
+steps:
+  - strata paper sync
+  - tectonic sync
+  - tectonic deploy campbell repos
+  - tectonic deploy campbell services

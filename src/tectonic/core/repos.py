@@ -35,3 +35,22 @@ def repo_status(root: Path, name: str) -> str:
     if result.stdout.strip():
         return "dirty"
     return "clean"
+
+
+def repo_ready(root: Path, name: str) -> tuple[bool, str]:
+    path = root / name
+    if not path.exists():
+        return False, "missing"
+    status = process.run(
+        ["git", "status", "--porcelain"], cwd=path, check=False, capture=True,
+    )
+    if status.stdout.strip():
+        return False, "uncommitted changes"
+    ahead = process.run(
+        ["git", "rev-list", "--count", "@{u}..HEAD"], cwd=path, check=False, capture=True,
+    )
+    if ahead.returncode != 0:
+        return False, "no upstream configured"
+    if ahead.stdout.strip() != "0":
+        return False, f"{ahead.stdout.strip()} unpushed commits"
+    return True, "ready"

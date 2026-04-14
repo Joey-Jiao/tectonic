@@ -3,7 +3,7 @@ from typing import Annotated
 import typer
 
 from tectonic import config
-from tectonic.cli import apply, deploy, dotfiles, packages, repos, services, sync
+from tectonic.cli import apply, deploy, dotfiles, packages, preset, repos, services, sync
 from tectonic.core import ui
 
 app = typer.Typer(
@@ -28,6 +28,8 @@ app.command(name="packages")(packages.packages)
 app.command(name="repos")(repos.repos)
 app.command(name="dotfiles")(dotfiles.dotfiles)
 app.add_typer(services.app, name="services", help="Deploy and inspect host services")
+
+app.command(name="preset")(preset.preset)
 
 app.command(name="sync")(sync.sync)
 
