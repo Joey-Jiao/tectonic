@@ -2,8 +2,4 @@
 fpath=(/usr/share/zsh/$ZSH_VERSION/functions /usr/share/zsh/site-functions $fpath)
 export PATH="$HOME/.local/bin:$PATH"
 source {{ .lmod_pkg }}/init/zsh
-{{ else -}}
-{{- if eq .chezmoi.os "darwin" }}
-export SSH_AUTH_SOCK="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
 {{- end }}
-{{ end -}}
