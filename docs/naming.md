@@ -2,13 +2,13 @@
 
 ## Machines
 
-Named after mountains. Always lowercase. The name serves as hostname, Tailscale node name, `hosts.yml` key, and SSH config `Host`.
+Named after mountains. Always lowercase. The name serves as hostname, Tailscale node name, `hosts.yaml` key, and SSH config `Host`.
 
-Current fleet: blanc, everest, campbell, granite.
+Current fleet: blanc, everest, campbell, granite (macOS workstations / server), pioneer (HPC).
 
 ### Setting the Hostname
 
-Set before installing any services (Tailscale uses hostname as node name).
+Set before installing Tailscale (it uses hostname as node name).
 
 **macOS** — three values, all set to the same name:
 
@@ -35,8 +35,19 @@ Format: `<category>-<name>` for categorized modules, or a bare `<name>` for foun
 | bare | `base`, `shell` | Foundational modules, no category prefix |
 | `dev-*` | `dev-c`, `dev-python`, `dev-node` | Development languages and toolchains |
 | `apps-*` | `apps-docker` | Application-level software |
+| `shell-*` | `shell-hpc` | Shell variants for special environments |
 
-Module names map directly to file paths: `dev-python` lives at `modules/dev/python.py`. Modules are internal to `tectonic apply` and not exposed as CLI commands.
+Module names map directly to file paths: `dev-python` lives at `modules/dev/python.py`, `shell-hpc` at `modules/shell_hpc.py`. Modules are internal to `tectonic packages` and not exposed as CLI commands.
+
+## Tools
+
+Tools (declared in `configs/tools.yaml`) take the unprefixed binary name as their key. The key serves as:
+
+- The map key in `tools.yaml`
+- The wrapper filename in `~/.local/bin/<name>`
+- The binary name passed to `uv run --project <path> <name>`
+
+So `strata` is the binary, the wrapper, and the key — always the same string.
 
 ## Config Constants
 
@@ -44,12 +55,9 @@ Constants in `src/tectonic/config.py` use a prefix to denote their category:
 
 | Prefix | Purpose | Examples |
 |--------|---------|----------|
-| `DIR_` | Directory paths | `DIR_ZSH_CONFIG`, `DIR_MINIFORGE` |
-| `URL_` | Download/install URLs | `URL_NVM_INSTALL`, `URL_STARSHIP_INSTALL` |
-| `PKGS_` | Package lists | `PKGS_BASE`, `PKGS_DEV_C` |
-| `ARCH_` | Architecture identifiers | `ARCH_CONDA`, `ARCH` |
-| `OS_` | OS identifiers | `OS_CONDA`, `SYSTEM` |
+| `DIR_` | Directory paths | `DIR_ZSH_CONFIG`, `DIR_LOCAL` |
+| (bare) | Single global identifiers | `ARCH`, `SYSTEM`, `LOG_FILE`, `CHEZMOI_SOURCE` |
 
 ## Presets
 
-Preset names in `hosts.yml` describe machine roles. Always lowercase: `workstation`, `server`.
+Preset names in `hosts.yaml` describe machine roles. Always lowercase: `workstation`, `server`, `hpc`.

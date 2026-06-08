@@ -1,198 +1,185 @@
 # Architecture
 
-tectonic is a single repository for all environment-related concerns across multiple machines. The system is organized into five layers, each building on the ones below it.
+tectonic is a single-machine environment bootstrap tool. The same repository works on any machine you clone it to — run `tectonic apply` and the machine converges to its declared state. tectonic does not manage cross-host state.
 
 ## Layers
 
 ```
-Layer 4: Services        launchd/systemd + command wrappers
-Layer 3: Data            rsync over Tailscale
-Layer 2: Configuration   chezmoi (dotfiles, config files)
-Layer 1: Software        tectonic CLI (packages, tools, runtimes)
-Layer 0: Infrastructure  1Password (identity, secrets) + Tailscale (network)
+Layer 2: Configuration   chezmoi (dotfiles, MCP client config)
+Layer 1: Software        tectonic CLI (packages, tools)
+Layer 0: Infrastructure  1Password + Tailscale + Homebrew/apt
 ```
 
 Each layer has a single owner and a clear boundary:
 
 | Layer | Owner | Manages | Depends On |
 |-------|-------|---------|------------|
-| 0 — Infrastructure | 1Password, Tailscale | Identity, secrets, network mesh | bare OS |
-| 1 — Software | tectonic CLI (`src/tectonic/`) | Installed packages, tools, runtimes | Layer 0 |
-| 2 — Configuration | chezmoi (`home/`) | Dotfiles, config files in `$HOME` | Layer 1 |
-| 3 — Data | rsync over Tailscale | User data (datasets, resources) | Layer 0 |
-| 4 — Services | launchd / systemd + wrappers | Daemons and command wrappers | Layer 0-2 |
+| 0 — Infrastructure | 1Password, Tailscale, Homebrew/apt | Identity, secrets, network, package manager | bare OS |
+| 1 — Software | tectonic CLI (`src/tectonic/`) | OS packages, cloned tool sources, CLI wrappers in `~/.local/bin/` | Layer 0 |
+| 2 — Configuration | chezmoi (`home/`) | Dotfiles, MCP client config, anything else in `$HOME` | Layer 1 |
 
-Layer 3 (Data) and Layers 1-2 (Software, Configuration) are independent of each other — both only require Layer 0. Services at Layer 4 typically need software installed and configured before they can run.
+## Scope
+
+tectonic does **not** manage:
+
+- **Daemon lifecycle** (launchd, systemd) — use chezmoi-managed plists if needed, or `launchctl`/`systemctl` directly
+- **Cross-host data sync** — single-machine model; copy files between machines manually when needed
+- **Remote command execution** — `ssh` directly when needed
+- **Project repositories** — `project/*`, `site/*`, etc. are cloned and updated manually; tectonic manages only the infra tools declared in `tools.yaml`
+- **Aggressive code updates** — `tectonic tools` does `git pull --ff-only`; uncommitted changes or diverged branches are skipped with a warning, never destroyed
+
+Multi-machine support is limited to "the same configs work on any machine you clone the repo to."
 
 ## Repository Layout
 
 ```
 tectonic/
 ├── configs/                  # Externalized configuration
-│   ├── hosts.yml             # Machine registry and desired state
+│   ├── hosts.yaml            # Machine registry and presets
 │   ├── packages/             # Per-module package lists (YAML)
-│   ├── services.yaml         # Service definitions (daemons + commands)
-│   ├── repos.yaml             # Repo declarations per host
-│   ├── sync.yaml             # Sync paths and ignore files for rsync
-│   └── urls.yaml
+│   ├── tools.yaml            # Tool definitions (repo + path)
+│   └── urls.yaml             # External installer URLs
 ├── home/                     # chezmoi source directory (Layer 2)
 │   ├── .chezmoidata/         # symlinks to configs/ for chezmoi template data
 │   ├── dot_zshenv
 │   ├── dot_claude/           # Claude Code config (CLAUDE.md, mcp.json, settings.json)
 │   ├── dot_config/
-│   │   ├── zsh/
-│   │   ├── git/
-│   │   ├── starship.toml
-│   │   └── 1Password/ssh/
-│   └── dot_ssh/
+│   └── run_onchange_*.sh     # chezmoi-triggered scripts (e.g. MCP registration)
 ├── src/tectonic/             # Python environment manager (Layer 1)
 │   ├── config.py
 │   ├── base/                 # ConfigService (reads configs/ YAML)
-│   ├── cli/                  # CLI commands and app entry point
+│   ├── cli/
 │   │   ├── __init__.py       # App definition and command registration
-│   │   ├── apply.py          # Orchestration (packages → repos → dotfiles → services)
-│   │   ├── packages.py       # Package installation
-│   │   ├── repos.py          # Repo clone/pull
-│   │   ├── dotfiles.py       # Chezmoi apply
-│   │   ├── services.py       # Read-only service inspection (list, status)
-│   │   ├── sync.py           # rsync-based data push
-│   │   └── deploy.py         # deploy + broadcast
+│   │   ├── apply.py          # Orchestration (packages → dotfiles → tools)
+│   │   ├── packages.py
+│   │   ├── dotfiles.py
+│   │   └── tools.py
 │   ├── core/
 │   │   ├── distro.py
-│   │   ├── process.py
 │   │   ├── fs.py
 │   │   ├── host.py
-│   │   ├── repos.py          # Repo resolution, clone/pull, status
-│   │   ├── services.py
+│   │   ├── process.py
+│   │   ├── tools.py
 │   │   └── ui.py
-│   └── modules/              # Internal install modules (not exposed in CLI)
-│       ├── __init__.py       # Module registry
-│       ├── base.py
-│       ├── shell.py
-│       ├── dev/
-│       │   ├── c.py
-│       │   ├── python.py
-│       │   └── node.py
-│       └── apps/
-│           └── docker.py
+│   └── modules/              # Internal install modules
 ├── docs/
 ├── tests/
 └── pyproject.toml
 ```
 
-## hosts.yml
+## hosts.yaml
 
-The machine registry (`configs/hosts.yml`). Each host declares a preset (a named set of modules) and optional extra modules. `tectonic apply` reads the current hostname, looks it up in `hosts.yml`, and converges to the declared state.
+The machine registry. Each host declares a preset (a named set of modules) and optional extras. `tectonic apply` reads the current hostname, looks it up in `hosts.yaml`, and converges to the declared state.
 
 ```yaml
 presets:
   workstation: [base, shell, dev-c, dev-python, dev-node]
-  server: [base, shell, dev-python]
+  server: [base, shell, dev-python, dev-node]
+  hpc: [shell-hpc]
 
 hosts:
-  everest:
+  blanc:
     preset: workstation
     user: blank
+    ssh_host: blanc
   campbell:
     preset: server
-    extra: [dev-node]
     user: blank
-  granite:
-    preset: workstation
-    extra: [apps-docker]
-    user: blank
+    ssh_host: campbell
+  pioneer:
+    preset: hpc
+    user: axj770
+    ssh_host: pioneer.case.edu
+    aliases: [hpc5, hpc6, hpc7, hpc8, hpctransfer1]
+    hpc:
+      scratch: /scratch/pioneer/users/axj770
+      lmod_pkg: /usr/local/lmod/lmod
+      modules: [GCCcore/13.2.0, git/2.42.0-GCCcore-13.2.0, Python/3.11.5-GCCcore-13.2.0]
 ```
+
+`user` and `ssh_host` are not consumed by the CLI (single-machine model) — they document where the host lives. `aliases` lets host resolution match alternative hostnames; `hpc:` is read by the `shell-hpc` module.
 
 ## Module System
 
-Each module is a Python file with a `run()` entry point, registered in `modules/__init__.py`. Modules are internal to the `apply` pipeline — they are not exposed as CLI commands.
+Each module is a Python file with a `run()` entry point, registered in `modules/__init__.py`. Modules are internal to the `packages` step — they are not exposed as CLI commands.
 
 | Module | Path | Contents |
 |--------|------|----------|
 | `base` | `modules/base.py` | curl, git, vim, neovim, htop, tree, unzip |
-| `shell` | `modules/shell.py` | zsh, starship, plugins, dotfiles |
+| `shell` | `modules/shell.py` | zsh, starship, plugins |
 | `dev-c` | `modules/dev/c.py` | gcc, cmake, gdb, ninja |
-| `dev-python` | `modules/dev/python.py` | uv (Python version management + venv + package install) |
-| `dev-node` | `modules/dev/node.py` | Node.js LTS via package manager |
+| `dev-python` | `modules/dev/python.py` | uv |
+| `dev-node` | `modules/dev/node.py` | Node.js LTS |
 | `apps-docker` | `modules/apps/docker.py` | Docker |
+| `shell-hpc` | `modules/shell_hpc.py` | HPC environment (lmod-based shell) |
 
 ## Apply Pipeline
 
-`tectonic apply` converges the current host to its declared state by orchestrating four steps:
+`tectonic apply` converges the current host to its declared state by running three steps in order:
 
 ```
-1. packages      resolve host preset → run matching modules
-2. repos         clone missing repos, pull existing (from repos.yaml)
-3. dotfiles      chezmoi apply --source home/ --force
-4. services      install/load services, remove stale ones
+1. packages    resolve host preset → run matching modules
+2. dotfiles    chezmoi apply --source home/ --force
+3. tools       clone-or-ff-pull sources, install ~/.local/bin/ wrappers
 ```
+
+Order matters: `dotfiles` adds `~/.local/bin/` to `PATH` (via zshenv), so the wrappers `tools` writes are immediately usable in new shells.
 
 Each step is idempotent and available as a standalone command.
 
 ## CLI
 
-### Local commands
-
-Each command operates on the current host only. Use `deploy`/`broadcast` to run them remotely.
-
 | Command | Behavior |
 |---------|----------|
-| `tectonic apply` | Converge current host (packages → repos → dotfiles → services) |
+| `tectonic apply` | Converge current host (packages → dotfiles → tools) |
 | `tectonic packages` | Install packages based on host preset |
-| `tectonic repos` | Clone missing and pull existing repos |
 | `tectonic dotfiles` | Apply dotfiles via chezmoi |
-| `tectonic services` | Deploy services, remove stale ones |
-| `tectonic services list` | List services with configuration details |
-| `tectonic services status` | Show runtime status |
+| `tectonic tools` | Clone-or-pull tool sources, install/update wrappers |
+| `tectonic tools --list` | List declared tools |
+| `tectonic tools --status` | Show source state (missing/dirty/clean) + wrapper state (missing/stale/ok) |
 
-### Remote commands
+There is no `services`, `sync`, `deploy`, `broadcast`, or `preset` command. By design.
 
-| Command | Behavior |
-|---------|----------|
-| `tectonic deploy <host> <cmd...>` | Run any tectonic command on a remote host via SSH |
-| `tectonic broadcast <cmd...>` | Run any tectonic command on all remote hosts |
-| `tectonic sync [host]` | Push workspace data to remote hosts via rsync |
+## Tools
 
-`deploy` and `broadcast` can run any local command remotely (e.g. `tectonic broadcast apply`). `sync` is different — it pushes data from local to remote, not remote execution.
-
-## Repos
-
-`tectonic repos` manages git repos declared in `configs/repos.yaml`:
+`tectonic tools` manages CLI tools declared in `configs/tools.yaml`:
 
 ```yaml
 root: ~/workspace
-
-repos:
-  infra/tectonic:
-    url: git@github.com:Joey-Jiao/tectonic.git
-    hosts: [blanc, everest, campbell, granite]
-  infra/strata:
-    url: git@github.com:Joey-Jiao/strata.git
-    hosts: [blanc, campbell]
+tools:
+  tectonic:
+    repo: git@github.com:Joey-Jiao/tectonic.git
+    path: infra/tectonic
+  strata:
+    repo: git@github.com:Joey-Jiao/strata.git
+    path: infra/strata
 ```
 
-Repos are resolved relative to `root`. Missing repos are cloned, existing repos are pulled (`--ff-only`). Also runs as part of `tectonic apply`. Use `--list` and `--status` for inspection. Use `tectonic deploy campbell repos` to pull on a remote host.
+For each tool:
 
-## Sync
+1. **Source.** If `<root>/<path>` is missing, clone from `repo`. If present, attempt `git pull --ff-only`. On uncommitted changes or diverged branches, skip with a warning — local work is never destroyed.
+2. **Wrapper.** Write `~/.local/bin/<name>` as `exec uv run --project <root>/<path> <name> "$@"`. If the file exists with identical content, skip.
 
-`tectonic sync` pushes workspace data via rsync. Configured in `configs/sync.yaml`:
-
-- **exclude**: global patterns always excluded (`.DS_Store`, `*.log`, etc.)
-- **ignore_files**: per-directory ignore files (`.gitignore`, `.syncignore`) — if present in a sync target directory, patterns inside are also excluded
-- **targets**: root directories and path globs to sync
-
-## Deploy
-
-`tectonic deploy` and `tectonic broadcast` run commands on remote hosts via SSH. Before executing, the remote tectonic repo is reset and pulled to ensure the latest code is used.
+`tectonic` is declared as a tool, so the first apply installs its own wrapper. Tools removed from `tools.yaml` are **not** auto-cleaned — remove the wrapper yourself (`rm ~/.local/bin/<name>`).
 
 ## Bootstrap Flow
 
-After Layer 0 is complete (Homebrew/apt, 1Password, Tailscale), a new machine only needs:
+After Layer 0 is complete (Homebrew/apt, 1Password, Tailscale), a new machine needs:
 
 ```bash
 # macOS: brew install uv  |  Linux: curl -LsSf https://astral.sh/uv/install.sh | sh
-git clone <repo> && cd tectonic
-uv run tectonic apply
+git clone <repo> ~/workspace/infra/tectonic
+cd ~/workspace/infra/tectonic && uv run tectonic apply
 ```
 
-The first `apply` installs packages (including chezmoi), clones declared repos, applies dotfiles, and deploys services (including the `tectonic` wrapper at `~/.local/bin/tectonic`). After that, just `tectonic apply`.
+The first apply:
+
+1. Installs OS packages for the host preset
+2. Applies dotfiles (which puts `~/.local/bin/` on PATH)
+3. Clones the remaining tool sources and writes all wrappers (including `~/.local/bin/tectonic`)
+
+After that, open a new shell. The entire daily interface is:
+
+```bash
+tectonic apply
+```

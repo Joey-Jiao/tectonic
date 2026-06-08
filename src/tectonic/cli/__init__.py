@@ -3,7 +3,7 @@ from typing import Annotated
 import typer
 
 from tectonic import config
-from tectonic.cli import apply, dotfiles, packages, repos
+from tectonic.cli import apply, dotfiles, packages, tools
 from tectonic.core import ui
 
 app = typer.Typer(
@@ -25,5 +25,5 @@ def main(
 
 app.command(name="apply")(apply.apply)
 app.command(name="packages")(packages.packages)
-app.command(name="repos")(repos.repos)
 app.command(name="dotfiles")(dotfiles.dotfiles)
+app.command(name="tools")(tools.tools)

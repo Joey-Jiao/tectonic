@@ -30,8 +30,8 @@ class TestHelp:
         result = runner.invoke(app, ["packages", "--help"])
         assert result.exit_code == 0
 
-    def test_repos_help(self):
-        result = runner.invoke(app, ["repos", "--help"])
+    def test_tools_help(self):
+        result = runner.invoke(app, ["tools", "--help"])
         assert result.exit_code == 0
 
     def test_dotfiles_help(self):
@@ -61,14 +61,14 @@ class TestApply:
         with patch("tectonic.cli.apply.host.get_hostname", return_value="testhost"), \
              patch("tectonic.cli.apply.config.configs", configs), \
              patch("tectonic.cli.apply.packages_cmd.packages") as mock_pkg, \
-             patch("tectonic.cli.apply.repos_cmd.repos") as mock_repos, \
-             patch("tectonic.cli.apply.dotfiles_cmd.dotfiles") as mock_dot:
+             patch("tectonic.cli.apply.dotfiles_cmd.dotfiles") as mock_dot, \
+             patch("tectonic.cli.apply.tools_cmd.tools") as mock_tools:
             result = runner.invoke(app, ["apply"])
 
         assert result.exit_code == 0
         mock_pkg.assert_called_once()
-        mock_repos.assert_called_once()
         mock_dot.assert_called_once()
+        mock_tools.assert_called_once()
 
     def test_hpc_host_resolves_alias(self, tmp_path):
         configs = _make_configs(tmp_path, {
@@ -86,8 +86,8 @@ class TestApply:
         with patch("tectonic.cli.apply.host.get_hostname", return_value="hpc6"), \
              patch("tectonic.cli.apply.config.configs", configs), \
              patch("tectonic.cli.apply.packages_cmd.packages"), \
-             patch("tectonic.cli.apply.repos_cmd.repos"), \
-             patch("tectonic.cli.apply.dotfiles_cmd.dotfiles"):
+             patch("tectonic.cli.apply.dotfiles_cmd.dotfiles"), \
+             patch("tectonic.cli.apply.tools_cmd.tools"):
             result = runner.invoke(app, ["apply"])
 
         assert result.exit_code == 0

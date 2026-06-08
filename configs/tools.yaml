@@ -1,0 +1,12 @@
+root: ~/workspace
+
+tools:
+  tectonic:
+    repo: git@github.com:Joey-Jiao/tectonic.git
+    path: infra/tectonic
+  strata:
+    repo: git@github.com:Joey-Jiao/strata.git
+    path: infra/strata
+  metro:
+    repo: git@github.com:Joey-Jiao/metro.git
+    path: infra/metro

@@ -3,7 +3,7 @@ import typer
 from tectonic import config
 from tectonic.cli import dotfiles as dotfiles_cmd
 from tectonic.cli import packages as packages_cmd
-from tectonic.cli import repos as repos_cmd
+from tectonic.cli import tools as tools_cmd
 from tectonic.core import host, ui
 
 
@@ -21,8 +21,8 @@ def apply() -> None:
     ui.section(f"Apply: {hostname}")
 
     packages_cmd.packages()
-    repos_cmd.repos()
     dotfiles_cmd.dotfiles()
+    tools_cmd.tools()
 
     ui.section("Apply Complete")
     ui.ok("Host converged to declared state")
