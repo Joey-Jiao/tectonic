@@ -4,7 +4,6 @@ from tectonic import config
 from tectonic.cli import dotfiles as dotfiles_cmd
 from tectonic.cli import packages as packages_cmd
 from tectonic.cli import repos as repos_cmd
-from tectonic.cli import services as services_cmd
 from tectonic.core import host, ui
 
 
@@ -24,7 +23,6 @@ def apply() -> None:
     packages_cmd.packages()
     repos_cmd.repos()
     dotfiles_cmd.dotfiles()
-    services_cmd.deploy()
 
     ui.section("Apply Complete")
     ui.ok("Host converged to declared state")

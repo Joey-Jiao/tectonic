@@ -8,9 +8,14 @@ fi
 ensure_mcp() {
     name=$1
     url=$2
-    if ! claude mcp list 2>/dev/null | grep -q "^${name}:"; then
-        claude mcp add --scope user --transport http "$name" "$url"
+    current=$(claude mcp list 2>/dev/null | grep "^${name}:" || true)
+    if [ -n "$current" ] && echo "$current" | grep -qF "$url"; then
+        return
     fi
+    if [ -n "$current" ]; then
+        claude mcp remove "$name" 2>/dev/null || true
+    fi
+    claude mcp add --scope user --transport http "$name" "$url"
 }
 
-ensure_mcp strata http://campbell:8716/mcp/
+ensure_mcp strata http://localhost:8716/mcp/

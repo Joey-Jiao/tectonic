@@ -6,7 +6,7 @@ repos:
     hosts: [blanc, everest, campbell, granite]
   infra/strata:
     url: git@github.com:Joey-Jiao/strata.git
-    hosts: [blanc, everest, campbell, granite]
+    hosts: [blanc]
   infra/metro:
     url: git@github.com:Joey-Jiao/metro.git
     hosts: [blanc, everest, campbell, granite]
