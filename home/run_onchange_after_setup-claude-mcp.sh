@@ -19,4 +19,4 @@ ensure_stdio_mcp() {
     claude mcp add --scope user --transport stdio "$name" "$@"
 }
 
-ensure_stdio_mcp strata strata serve --transport stdio
+ensure_stdio_mcp strata strata serve
